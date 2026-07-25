@@ -1,0 +1,46 @@
+# Continue Here
+
+<!-- Created in Phase 1 and maintained for the life of the project.
+     The three fields below drive the /forge detection ladder. A stale Gate
+     will route the next session into the wrong phase, so update them as part
+     of the work, not as bookkeeping afterward. -->
+
+Phase: <1 spec | 2 env | 3 code>
+Gate:  <IN_PROGRESS | AWAITING_APPROVAL | PASSED>
+Mode:  <FLOW | STRICT>
+
+Last updated: <ISO timestamp>
+Current task: <TODO.md task ID and one line, or "none, awaiting next task">
+Branch: <branch name, or main>
+Working tree: <clean | exactly what is uncommitted and why>
+Last commit: <short SHA and subject>
+Last release: <tag, or "none yet">
+Test suite: <passing | failing, with which tests and whether that is expected>
+
+## Next action
+
+<ONE concrete action. Not a goal. Name the file, the function, the test.
+Bad:  "Implement authentication"
+Good: "Add the token refresh branch to AuthClient.refresh in src/auth/client.ts.
+       Tests at tests/auth/refresh.test.ts:88 are written and currently failing
+       with 'refresh is not a function', which is expected.">
+
+## Verify current state
+
+<A command to run, and the output that means things are healthy.
+Example: "npm test -- --run auth  ->  3 passing, 2 failing (refresh suite)">
+
+## In flight
+
+<Anything half-done: partial edits, failing tests, an approach being trialled,
+a refactor midway. Say explicitly if nothing is in flight.>
+
+## Blocked on me
+
+<Anything needed from the user: decisions, screenshots, credentials, access,
+an elevated command to run. Say explicitly if nothing.>
+
+## Notes for the next session
+
+<Anything a cold start would not infer from the code. Approaches already tried
+and rejected, gotchas discovered, why something looks wrong but is correct.>

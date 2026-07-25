@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "dailen",
+  "description": "Dailen Gunter's Claude Code plugins.",
+  "owner": {
+    "name": "Dailen Gunter",
+    "email": "me@dailen.net"
+  },
+  "plugins": [
+    {
+      "name": "forge-workflow",
+      "description": "Gated spec-to-ship lifecycle for Claude Code, driven by one command.",
+      "source": "./",
+      "category": "productivity",
+      "author": {
+        "name": "Dailen Gunter",
+        "email": "me@dailen.net"
+      },
+      "homepage": "https://daileng.github.io/forge-workflow/",
+      "repository": "https://github.com/DailenG/forge-workflow",
+      "license": "MIT"
+    }
+  ]
+}

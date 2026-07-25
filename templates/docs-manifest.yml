@@ -1,0 +1,33 @@
+# Documentation drift gate manifest.
+#
+# Maps documentation pages to the code symbols they describe. CI compares the
+# recorded signature against the live CodeGraph index and fails the build when a
+# documented symbol changed but its page did not.
+#
+# Documentation that silently rots is worse than none, because it is trusted.
+
+version: 1
+
+pages:
+  - path: docs/api/authentication.md
+    describes:
+      - symbol: AuthClient.refresh
+        signature: "refresh(token: string): Promise<Token>"
+      - symbol: AuthClient.revoke
+        signature: "revoke(token: string): Promise<void>"
+    last_reviewed: YYYY-MM-DD
+
+  - path: README.md
+    describes:
+      - symbol: main
+        signature: "main(argv: string[]): number"
+    last_reviewed: YYYY-MM-DD
+
+# Pages with no code symbols (concept docs, runbooks, decision records) are
+# exempt. List them here so the gate can report coverage of the docs tree
+# rather than silently ignoring gaps.
+exempt:
+  - docs/DECISIONS.md
+  - docs/SRS.md
+  - docs/ENVIRONMENT.md
+  - docs/traceability.md

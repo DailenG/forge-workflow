@@ -1,0 +1,37 @@
+# Pre-push gate. This is the ONLY automated check before code reaches main,
+# since this workflow uses no pull request review.
+#
+# Install:  lefthook install
+# Verify:   deliberately break a test, attempt a push, confirm refusal.
+#           A hook that silently does not run is worse than no hook.
+#
+# --no-verify is prohibited by project standards. If this blocks you, fix what
+# it caught, or report that it is blocking and why.
+
+pre-push:
+  parallel: false
+  commands:
+    01_secrets:
+      run: gitleaks detect --no-banner --redact --exit-code 1
+      fail_text: "Secret detected. Do not commit it, do not bypass this. Rotate anything exposed."
+
+    02_lint:
+      run: <lint command>
+      fail_text: "Lint failed."
+
+    03_build:
+      run: <build command>
+      fail_text: "Build failed. Main must always build."
+
+    04_test:
+      run: <test command>
+      fail_text: "Tests failed. Do not weaken tests to get past this."
+
+# Optional: keep commits cheap and fast, put only formatting here.
+pre-commit:
+  parallel: true
+  commands:
+    format:
+      glob: "*.{ext}"
+      run: <formatter> {staged_files}
+      stage_fixed: true

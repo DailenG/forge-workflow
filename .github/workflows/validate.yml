@@ -1,0 +1,49 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Manifests parse, hooks references resolve, guide present
+        run: node .github/scripts/manifest-check.js
+
+      - name: node --check every hook script
+        run: |
+          set -e
+          shopt -s nullglob
+          found=0
+          for f in scripts/*.js; do
+            found=1
+            echo "checking $f"
+            node --check "$f"
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "no scripts found under scripts/"
+            exit 1
+          fi
+
+      - name: Typography check (ASCII only)
+        run: node .github/scripts/typography-check.js
+
+      # The Claude Code CLI is installable in CI as an npm package, so plugin
+      # validation runs as a real gate here. If that ever stops being true,
+      # replace this step with JSON Schema validation against
+      # https://json.schemastore.org/claude-code-marketplace.json rather than
+      # removing the check.
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: claude plugin validate --strict
+        run: claude plugin validate --strict .

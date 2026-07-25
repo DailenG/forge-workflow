@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forge: from idea to finished tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#071A2C;
+  --ink-2:#0C2740;
+  --ink-3:#123554;
+  --rule:#2A5479;
+  --rule-soft:#1B3F5F;
+  --chalk:#EAF1F7;
+  --chalk-2:#A9C0D4;
+  --chalk-3:#6E8CA6;
+  --amber:#F0C14B;
+  --stop:#E06A63;
+  --go:#7FC29B;
+  --display:"Barlow Condensed",'Arial Narrow',sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --sheet:min(1180px,100% - 3rem);
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *{animation:none !important;transition:none !important}
+}
+body{
+  margin:0;
+  background:var(--ink);
+  color:var(--chalk);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    linear-gradient(var(--rule-soft) 1px,transparent 1px),
+    linear-gradient(90deg,var(--rule-soft) 1px,transparent 1px);
+  background-size:52px 52px;
+  background-position:-1px -1px;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(7,26,44,0) 0%,var(--ink) 78%);
+}
+.wrap{position:relative;z-index:1}
+
+/* ---------- drafting sheet frame ---------- */
+.sheet{width:var(--sheet);margin:0 auto;position:relative}
+.regmark{position:absolute;width:18px;height:18px;pointer-events:none}
+.regmark::before,.regmark::after{content:"";position:absolute;background:var(--rule)}
+.regmark::before{left:0;top:8px;width:18px;height:1px}
+.regmark::after{left:8px;top:0;width:1px;height:18px}
+
+/* ---------- type ---------- */
+h1,h2,h3,h4{font-family:var(--display);font-weight:600;letter-spacing:.02em;margin:0}
+h1{font-size:clamp(2.6rem,7vw,5.2rem);line-height:.95;text-transform:uppercase;letter-spacing:.01em}
+h2{font-size:clamp(1.7rem,3.6vw,2.6rem);text-transform:uppercase;line-height:1.05}
+h3{font-size:1.32rem;text-transform:uppercase;letter-spacing:.05em;color:var(--chalk)}
+h4{font-size:1.04rem;text-transform:uppercase;letter-spacing:.08em;color:var(--chalk-2)}
+p{margin:0 0 1.05rem}
+a{color:var(--amber)}
+strong{font-weight:600;color:#fff}
+
+.eyebrow{
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--chalk-3);display:block;margin-bottom:.7rem;
+}
+.lede{font-size:1.22rem;line-height:1.6;color:var(--chalk-2);max-width:62ch}
+
+code,kbd{font-family:var(--mono);font-size:.87em}
+:not(pre) > code{
+  background:var(--ink-3);border:1px solid var(--rule-soft);
+  padding:.09em .38em;border-radius:2px;color:var(--chalk);white-space:nowrap;
+}
+pre{
+  font-family:var(--mono);font-size:.84rem;line-height:1.75;
+  background:#04121F;border:1px solid var(--rule-soft);border-left:3px solid var(--amber);
+  padding:1.05rem 1.2rem;overflow-x:auto;margin:0 0 1.1rem;color:var(--chalk);
+}
+pre .c{color:var(--chalk-3)}
+pre .u{color:var(--amber)}
+
+/* ---------- hero ---------- */
+header.hero{padding:5.5rem 0 3.5rem;border-bottom:1px solid var(--rule)}
+.hero-grid{display:grid;grid-template-columns:1fr;gap:2.5rem}
+@media(min-width:900px){.hero-grid{grid-template-columns:1.35fr .95fr;align-items:end}}
+h1 .thin{display:block;font-weight:400;color:var(--chalk-3);font-size:.34em;letter-spacing:.22em;margin-bottom:.9rem}
+.hero-cmd{
+  border:1px solid var(--rule);background:var(--ink-2);padding:1.4rem 1.5rem;position:relative;
+}
+.hero-cmd .lbl{font-family:var(--mono);font-size:.66rem;letter-spacing:.2em;color:var(--chalk-3);text-transform:uppercase}
+.hero-cmd .big{font-family:var(--mono);font-size:2rem;color:var(--amber);margin:.4rem 0 .5rem;font-weight:500}
+.hero-cmd p{margin:0;font-size:.94rem;color:var(--chalk-2)}
+
+/* ---------- title block (engineering drawing convention) ---------- */
+.titleblock{
+  border:1px solid var(--rule);margin:2.8rem 0 0;display:grid;
+  grid-template-columns:repeat(2,1fr);font-family:var(--mono);font-size:.72rem;
+}
+@media(min-width:760px){.titleblock{grid-template-columns:repeat(4,1fr)}}
+.titleblock div{padding:.7rem .9rem;border-right:1px solid var(--rule-soft);border-top:1px solid var(--rule-soft)}
+.titleblock div:nth-child(-n+2){border-top:none}
+@media(min-width:760px){.titleblock div:nth-child(-n+4){border-top:none}}
+.titleblock span{display:block;color:var(--chalk-3);letter-spacing:.14em;font-size:.62rem;text-transform:uppercase;margin-bottom:.2rem}
+.titleblock b{color:var(--chalk);font-weight:500}
+
+/* ---------- layout with rail ---------- */
+.main{display:grid;grid-template-columns:1fr;gap:0}
+@media(min-width:1040px){.main{grid-template-columns:210px 1fr;gap:3.5rem}}
+nav.rail{display:none}
+@media(min-width:1040px){
+  nav.rail{display:block;position:sticky;top:0;align-self:start;height:100vh;padding:3rem 0;overflow-y:auto}
+}
+.rail ol{list-style:none;margin:0;padding:0;position:relative}
+.rail ol::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:1px;background:var(--rule)}
+.rail li{position:relative;padding:0 0 0 1.9rem;margin-bottom:.1rem}
+.rail a{
+  display:block;padding:.42rem 0;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;
+  color:var(--chalk-3);text-decoration:none;border:0;transition:color .2s;
+}
+.rail a::before{
+  content:"";position:absolute;left:3px;top:.82rem;width:9px;height:9px;
+  border:1px solid var(--rule);background:var(--ink);border-radius:50%;transition:all .2s;
+}
+.rail a:hover{color:var(--chalk-2)}
+.rail a.on{color:var(--amber)}
+.rail a.on::before{background:var(--amber);border-color:var(--amber);box-shadow:0 0 0 3px rgba(240,193,75,.15)}
+.rail .gatemark::before{border-radius:0;border-color:var(--stop);width:9px;height:9px}
+.rail .grp{
+  font-family:var(--mono);font-size:.6rem;letter-spacing:.2em;color:var(--chalk-3);
+  text-transform:uppercase;padding:1.4rem 0 .4rem 1.9rem;opacity:.65;
+}
+
+section{padding:4rem 0;border-bottom:1px solid var(--rule-soft);scroll-margin-top:1rem}
+section:last-of-type{border-bottom:0}
+.secnum{
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.2em;color:var(--amber);
+  display:block;margin-bottom:.55rem;
+}
+.prose{max-width:70ch}
+
+/* ---------- callouts ---------- */
+.note{
+  border:1px solid var(--rule);border-left:3px solid var(--amber);background:var(--ink-2);
+  padding:1.15rem 1.35rem;margin:1.6rem 0;
+}
+.note.stop{border-left-color:var(--stop)}
+.note.go{border-left-color:var(--go)}
+.note h4{margin-bottom:.5rem;color:var(--amber)}
+.note.stop h4{color:var(--stop)}
+.note.go h4{color:var(--go)}
+.note p:last-child{margin-bottom:0}
+
+/* ---------- glossary terms ---------- */
+.term{
+  font:inherit;color:var(--amber);background:none;border:0;border-bottom:1px dashed var(--amber);
+  padding:0;cursor:help;line-height:inherit;
+}
+.term:hover,.term:focus-visible{background:rgba(240,193,75,.13);outline:none}
+#tip{
+  position:absolute;z-index:60;max-width:330px;background:#04121F;border:1px solid var(--amber);
+  padding:.85rem 1rem;font-size:.86rem;line-height:1.55;color:var(--chalk);display:none;
+  box-shadow:0 12px 34px rgba(0,0,0,.55);
+}
+#tip strong{display:block;font-family:var(--display);text-transform:uppercase;letter-spacing:.07em;color:var(--amber);margin-bottom:.25rem;font-size:.95rem}
+
+/* ---------- tables ---------- */
+table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.9rem}
+th,td{text-align:left;padding:.7rem .85rem;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+th{
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--chalk-3);border-bottom:1px solid var(--rule);font-weight:500;
+}
+td code{white-space:nowrap}
+
+/* ---------- ladder ---------- */
+.ladder{display:grid;gap:.4rem;margin:1.8rem 0}
+.rung{
+  display:grid;grid-template-columns:2.3rem 1fr;gap:1rem;align-items:start;
+  border:1px solid var(--rule-soft);background:var(--ink-2);padding:.85rem 1rem;
+  cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%;transition:border-color .18s,background .18s;
+}
+.rung:hover{border-color:var(--rule);background:var(--ink-3)}
+.rung[aria-expanded="true"]{border-color:var(--amber);background:var(--ink-3)}
+.rung .n{font-family:var(--mono);color:var(--amber);font-size:.9rem;padding-top:.05rem}
+.rung .q{font-weight:450}
+.rung .a{display:none;margin-top:.6rem;font-size:.9rem;color:var(--chalk-2);grid-column:2}
+.rung[aria-expanded="true"] .a{display:block}
+.rung .gate{color:var(--stop);font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase}
+
+/* ---------- step cards ---------- */
+.steps{display:grid;gap:1.1rem;margin:1.8rem 0}
+@media(min-width:820px){.steps.two{grid-template-columns:1fr 1fr}}
+.step{border:1px solid var(--rule-soft);background:var(--ink-2);padding:1.2rem 1.35rem}
+.step .k{
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--chalk-3);margin-bottom:.45rem;display:block;
+}
+.step h4{margin-bottom:.5rem;color:var(--chalk)}
+.step p:last-child{margin-bottom:0}
+.step ul{margin:.4rem 0 0;padding-left:1.1rem;color:var(--chalk-2);font-size:.93rem}
+.step li{margin-bottom:.3rem}
+
+/* ---------- dialogue ---------- */
+.dlg{border:1px solid var(--rule-soft);margin:1.6rem 0;background:#04121F}
+.dlg .row{display:grid;grid-template-columns:5.6rem 1fr;border-bottom:1px solid var(--rule-soft)}
+.dlg .row:last-child{border-bottom:0}
+.dlg .who{
+  font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+  padding:.9rem .85rem;color:var(--chalk-3);border-right:1px solid var(--rule-soft);
+}
+.dlg .you .who{color:var(--amber)}
+.dlg .msg{padding:.9rem 1.1rem;font-size:.92rem;line-height:1.6}
+.dlg .msg p{margin:0 0 .55rem}
+.dlg .msg p:last-child{margin:0}
+.dlg .you .msg{font-family:var(--mono);font-size:.84rem;color:var(--amber)}
+
+svg{display:block;max-width:100%;height:auto}
+.figure{margin:2rem 0}
+.figcap{
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--chalk-3);margin-top:.7rem;
+}
+ul.plain{padding-left:1.15rem;color:var(--chalk-2)}
+ul.plain li{margin-bottom:.5rem}
+ul.plain strong{color:var(--chalk)}
+
+footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-size:.74rem;letter-spacing:.08em}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="sheet">
+    <div class="regmark" style="top:-14px;left:-22px"></div>
+    <div class="regmark" style="top:-14px;right:-22px"></div>
+    <div class="hero-grid">
+      <div>
+        <h1><span class="thin">A guide for people who are not developers</span>Forge</h1>
+        <p class="lede" style="margin-top:1.6rem">
+          You know your work. You have an idea for a tool that would make it easier.
+          What you do not have is years of software habits. Forge supplies the habits,
+          asks you the right questions, and refuses to let the project become a mess.
+        </p>
+      </div>
+      <div class="hero-cmd">
+        <span class="lbl">The only command you have to remember</span>
+        <div class="big">/forge</div>
+        <p>Type it whenever you sit down. It works out where the project stands and does the next thing.</p>
+      </div>
+    </div>
+
+    <div class="titleblock">
+      <div><span>Audience</span><b>Technical, not a developer</b></div>
+      <div><span>Runs in</span><b>Claude Code</b></div>
+      <div><span>Reading time</span><b>About 20 minutes</b></div>
+      <div><span>Prerequisite</span><b>None beyond install</b></div>
+    </div>
+  </div>
+</header>
+
+<div class="sheet">
+<div class="main">
+
+<nav class="rail" aria-label="Sections">
+  <ol>
+    <li class="grp">Orientation</li>
+    <li><a href="#what">01 &nbsp;What this is</a></li>
+    <li><a href="#model">02 &nbsp;The mental model</a></li>
+    <li><a href="#install">03 &nbsp;Setting it up</a></li>
+    <li class="grp">Phase one</li>
+    <li><a href="#describe">04 &nbsp;Describing the idea</a></li>
+    <li><a href="#approve" class="gatemark">05 &nbsp;The approval gate</a></li>
+    <li class="grp">Phase two</li>
+    <li><a href="#bench">06 &nbsp;Preparing the bench</a></li>
+    <li class="grp">Phase three</li>
+    <li><a href="#build">07 &nbsp;Building in slices</a></li>
+    <li><a href="#blocked" class="gatemark">08 &nbsp;When it stops you</a></li>
+    <li><a href="#away">09 &nbsp;Walking away</a></li>
+    <li><a href="#ship">10 &nbsp;Shipping it</a></li>
+    <li class="grp">Reference</li>
+    <li><a href="#files">11 &nbsp;Your project files</a></li>
+    <li><a href="#words">12 &nbsp;Plain-English words</a></li>
+    <li><a href="#card">13 &nbsp;Quick reference</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- 01 -->
+<section id="what">
+  <span class="secnum">01</span>
+  <h2>What this is, and what it saves you from</h2>
+  <div class="prose">
+    <p>
+      Software projects fail in boring ways. You describe what you want too vaguely and get the wrong
+      thing. You lose two days of work because nothing was saved properly. You come back after a week
+      and cannot remember what you were doing. You ship something that quietly broke last Tuesday and
+      nobody noticed.
+    </p>
+    <p>
+      Forge is a set of instructions that runs inside <strong>Claude Code</strong>. It does not write
+      your software for you so much as it insists on doing it in an order that works, and it stops at
+      the points where a human has to make a real decision.
+    </p>
+
+    <div class="steps two">
+      <div class="step">
+        <span class="k">It does this for you</span>
+        <h4>The professional habits</h4>
+        <ul>
+          <li>Asks until it actually understands your idea</li>
+          <li>Sets up your computer with the right tools</li>
+          <li>Writes automated checks that catch mistakes</li>
+          <li>Saves work constantly so nothing is lost</li>
+          <li>Keeps documentation truthful</li>
+          <li>Packages finished versions you can point at</li>
+        </ul>
+      </div>
+      <div class="step">
+        <span class="k">You do this</span>
+        <h4>The judgment calls</h4>
+        <ul>
+          <li>Answer questions about what you want</li>
+          <li>Read the plan and approve it</li>
+          <li>Decide who can see the project</li>
+          <li>Approve anything that needs admin rights</li>
+          <li>Say when a version is ready to release</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="note">
+      <h4>You do not need to know how to code</h4>
+      <p>
+        You do need to know your own problem well enough to answer questions about it. If you can
+        explain to a colleague what is annoying you and what "fixed" would look like, that is enough
+        to start.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- 02 -->
+<section id="model">
+  <span class="secnum">02</span>
+  <h2>The mental model</h2>
+  <div class="prose">
+    <p>
+      Three phases, in order, with a hard stop between each. You cannot skip ahead, and neither can
+      Claude. Think of it the way a building goes up: drawings get approved before anyone pours
+      concrete.
+    </p>
+  </div>
+
+  <div class="figure">
+    <svg viewBox="0 0 980 300" role="img" aria-label="Diagram: three phases separated by approval gates">
+      <defs>
+        <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 z" fill="#6E8CA6"/>
+        </marker>
+      </defs>
+
+      <!-- phase 1 -->
+      <rect x="16" y="70" width="248" height="126" fill="#0C2740" stroke="#2A5479"/>
+      <text x="34" y="98" font-family="IBM Plex Mono,monospace" font-size="11" fill="#F0C14B" letter-spacing="2">PHASE 1</text>
+      <text x="34" y="126" font-family="Barlow Condensed,sans-serif" font-size="25" fill="#EAF1F7" text-transform="uppercase">DESCRIBE IT</text>
+      <text x="34" y="152" font-family="IBM Plex Sans,sans-serif" font-size="13" fill="#A9C0D4">Claude interviews you</text>
+      <text x="34" y="172" font-family="IBM Plex Sans,sans-serif" font-size="13" fill="#A9C0D4">until it understands.</text>
+      <text x="34" y="192" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#6E8CA6">OUT: a written spec</text>
+
+      <!-- gate 1 -->
+      <line x1="292" y1="52" x2="292" y2="214" stroke="#E06A63" stroke-width="2" stroke-dasharray="6 5"/>
+      <text x="292" y="42" font-family="IBM Plex Mono,monospace" font-size="10" fill="#E06A63" text-anchor="middle" letter-spacing="1.5">GATE</text>
+      <text x="292" y="236" font-family="IBM Plex Sans,sans-serif" font-size="12" fill="#E06A63" text-anchor="middle">You approve</text>
+      <text x="292" y="252" font-family="IBM Plex Sans,sans-serif" font-size="12" fill="#E06A63" text-anchor="middle">the spec</text>
+
+      <!-- phase 2 -->
+      <rect x="320" y="70" width="248" height="126" fill="#0C2740" stroke="#2A5479"/>
+      <text x="338" y="98" font-family="IBM Plex Mono,monospace" font-size="11" fill="#F0C14B" letter-spacing="2">PHASE 2</text>
+      <text x="338" y="126" font-family="Barlow Condensed,sans-serif" font-size="25" fill="#EAF1F7">PREPARE</text>
+      <text x="338" y="152" font-family="IBM Plex Sans,sans-serif" font-size="13" fill="#A9C0D4">Installs tools, sets up</text>
+      <text x="338" y="172" font-family="IBM Plex Sans,sans-serif" font-size="13" fill="#A9C0D4">safety nets, proves both.</text>
+      <text x="338" y="192" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#6E8CA6">OUT: a working bench</text>
+
+      <!-- gate 2 -->
+      <line x1="596" y1="52" x2="596" y2="214" stroke="#E06A63" stroke-width="2" stroke-dasharray="6 5"/>
+      <text x="596" y="42" font-family="IBM Plex Mono,monospace" font-size="10" fill="#E06A63" text-anchor="middle" letter-spacing="1.5">GATE</text>
+      <text x="596" y="236" font-family="IBM Plex Sans,sans-serif" font-size="12" fill="#E06A63" text-anchor="middle">Everything</text>
+      <text x="596" y="252" font-family="IBM Plex Sans,sans-serif" font-size="12" fill="#E06A63" text-anchor="middle">proven working</text>
+
+      <!-- phase 3 -->
+      <rect x="624" y="70" width="248" height="126" fill="#0C2740" stroke="#2A5479"/>
+      <text x="642" y="98" font-family="IBM Plex Mono,monospace" font-size="11" fill="#F0C14B" letter-spacing="2">PHASE 3</text>
+      <text x="642" y="126" font-family="Barlow Condensed,sans-serif" font-size="25" fill="#EAF1F7">BUILD IT</text>
+      <text x="642" y="152" font-family="IBM Plex Sans,sans-serif" font-size="13" fill="#A9C0D4">One small piece at a</text>
+      <text x="642" y="172" font-family="IBM Plex Sans,sans-serif" font-size="13" fill="#A9C0D4">time, each one tested.</text>
+      <text x="642" y="192" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#6E8CA6">OUT: the finished tool</text>
+
+      <line x1="266" y1="133" x2="288" y2="133" stroke="#6E8CA6" marker-end="url(#ar)"/>
+      <line x1="570" y1="133" x2="592" y2="133" stroke="#6E8CA6" marker-end="url(#ar)"/>
+      <line x1="874" y1="133" x2="944" y2="133" stroke="#6E8CA6" marker-end="url(#ar)"/>
+      <text x="908" y="124" font-family="IBM Plex Mono,monospace" font-size="10" fill="#7FC29B" text-anchor="middle">SHIP</text>
+    </svg>
+    <div class="figcap">Fig. 1 &nbsp;/&nbsp; The three phases. Dashed red lines are gates: Claude stops and waits for you.</div>
+  </div>
+
+  <div class="prose">
+    <h3 style="margin-top:2.4rem">How <code>/forge</code> knows where you are</h3>
+    <p>
+      You never tell it which phase you are in. It looks at your project and works it out. Expand a
+      rung to see what happens in that situation.
+    </p>
+  </div>
+
+  <div class="ladder">
+    <button class="rung" aria-expanded="false">
+      <span class="n">01</span>
+      <span><span class="q">There is no written spec yet</span>
+      <span class="a">Brand new project. It starts interviewing you about your idea.</span></span>
+    </button>
+    <button class="rung" aria-expanded="false">
+      <span class="n">02</span>
+      <span><span class="q">A spec exists but you have not approved it <span class="gate">&nbsp;gate</span></span>
+      <span class="a">It stops. It summarises what it wrote and waits. It will not approve its own work, no matter how confident it is.</span></span>
+    </button>
+    <button class="rung" aria-expanded="false">
+      <span class="n">03</span>
+      <span><span class="q">Spec approved, computer not set up yet</span>
+      <span class="a">Moves to Phase 2 and starts checking what is installed on your machine.</span></span>
+    </button>
+    <button class="rung" aria-expanded="false">
+      <span class="n">04</span>
+      <span><span class="q">Setup started but something did not finish</span>
+      <span class="a">Picks up at the exact item that failed rather than starting the whole setup again.</span></span>
+    </button>
+    <button class="rung" aria-expanded="false">
+      <span class="n">05</span>
+      <span><span class="q">Bench ready, nothing built yet</span>
+      <span class="a">Writes a build plan: the list of pieces, hardest first, and asks you to approve the order.</span></span>
+    </button>
+    <button class="rung" aria-expanded="false">
+      <span class="n">06</span>
+      <span><span class="q">You were halfway through something</span>
+      <span class="a">This is the one that matters most. It reads its notes, checks them against what is really on disk, and tells you if the two disagree before touching anything.</span></span>
+    </button>
+    <button class="rung" aria-expanded="false">
+      <span class="n">07</span>
+      <span><span class="q">Last piece finished, more still on the list</span>
+      <span class="a">Starts the next piece.</span></span>
+    </button>
+    <button class="rung" aria-expanded="false">
+      <span class="n">08</span>
+      <span><span class="q">Everything on the list is done <span class="gate">&nbsp;gate</span></span>
+      <span class="a">Stops being autonomous and proposes a release. Releases always need your say-so.</span></span>
+    </button>
+  </div>
+</section>
+
+<!-- 03 -->
+<section id="install">
+  <span class="secnum">03</span>
+  <h2>Setting it up, once</h2>
+  <div class="prose">
+    <p>Two commands. Claude Code fetches Forge from a public catalog and installs it for you.</p>
+<pre><span class="c"># point Claude Code at the catalog, then install the plugin</span>
+<span class="u">claude plugin marketplace add</span> DailenG/forge-workflow
+<span class="u">claude plugin install</span> forge-workflow@dailen</pre>
+    <p>
+      Confirm when it asks, then run <code>/reload-plugins</code> or restart Claude Code. Type
+      <code>/</code> and you should see <code>forge</code> in the list along with three others. Those
+      three are manual overrides you will probably never need.
+    </p>
+    <p>
+      When a new version ships later, <code>claude plugin marketplace update dailen</code> pulls it down.
+    </p>
+
+    <div class="note">
+      <h4>One prerequisite worth checking</h4>
+      <p>
+        Forge uses small background scripts that need <strong>Node.js</strong> installed. If it is
+        missing, everything still works except the automatic memory between sessions, which is a real
+        loss. Forge checks this itself and tells you, so you do not have to remember.
+      </p>
+    </div>
+
+    <h3 style="margin-top:2.2rem">The manual way, if you would rather</h3>
+    <p>
+      Prefer to drop the folder into place by hand? Download the zip from the
+      <a href="https://github.com/DailenG/forge-workflow/releases">releases page</a>, close Claude Code,
+      then extract it so the folder lands here:
+    </p>
+<pre>C:\Users\&lt;you&gt;\.claude\skills\forge-workflow\</pre>
+    <p>
+      On Windows, that <code>.claude</code> folder is hidden. Paste the path into the Explorer address
+      bar rather than trying to click your way to it. Check it worked:
+    </p>
+<pre><span class="c"># should report no problems</span>
+<span class="u">claude plugin validate</span> $env:USERPROFILE\.claude\skills\forge-workflow --strict
+
+<span class="c"># should list forge-workflow@skills-dir</span>
+<span class="u">claude plugin list</span></pre>
+    <p>
+      Restart Claude Code and you land in the same place as the two-command install above.
+    </p>
+  </div>
+</section>
+
+<!-- 04 -->
+<section id="describe">
+  <span class="secnum">04</span>
+  <h2>Phase one: describing the idea</h2>
+  <div class="prose">
+    <p>
+      Make an empty folder, open Claude Code inside it, and type <code>/forge</code>. Nothing else.
+    </p>
+    <p>
+      It will start asking questions in small batches, three to seven at a time, with lettered options
+      where there is a sensible shortlist. Most rounds you can answer with a few letters and a phrase.
+    </p>
+  </div>
+
+  <div class="dlg">
+    <div class="row you"><div class="who">You</div><div class="msg">/forge</div></div>
+    <div class="row"><div class="who">Claude</div><div class="msg">
+      <p><strong>Round 1.</strong> Before anything else I need to know what problem this solves.</p>
+      <p>1. In a sentence or two, what should this do, and what is unacceptable about how things work today?</p>
+      <p>2. Who uses it? (a) just you, (b) your team, (c) customers. <em>No recommendation, this is yours to answer.</em></p>
+      <p>3. Where is it used from? (a) a command line, (b) a desktop window, (c) a web page, (d) a phone.</p>
+    </div></div>
+    <div class="row you"><div class="who">You</div><div class="msg">
+      1. Our file shares collect very long folder paths and backups fail with useless errors. I want to find them before the backup does.<br>
+      2. a<br>
+      3. a
+    </div></div>
+    <div class="row"><div class="who">Claude</div><div class="msg">
+      <p><strong>Confidence: 20 out of 100.</strong> Held down by testing, which we have not discussed.</p>
+      <p><strong>Round 2.</strong> Now the part that decides everything else...</p>
+    </div></div>
+  </div>
+
+  <div class="prose">
+    <h3 style="margin-top:2.2rem">The confidence score</h3>
+    <p>
+      After each round it scores how well it understands ten areas, and reports
+      <strong>the lowest one</strong>, not the average. That is deliberate. Averaging lets a single
+      unanswered question hide behind nine confident ones, and that question is usually the one that
+      wrecks the project later.
+    </p>
+    <p>
+      It keeps going until the lowest score reaches 95. In practice that is six to eight rounds and
+      maybe twenty minutes.
+    </p>
+
+    <div class="note">
+      <h4>Expect it to push back</h4>
+      <p>
+        It will press hardest on two things people skip. <strong>Testing:</strong> how you will know
+        the thing actually works. <strong>Non-goals:</strong> what this deliberately will not do.
+        Vague answers here produce a vague spec, so it does not let them pass.
+      </p>
+    </div>
+
+    <h3 style="margin-top:2.2rem">Choosing the technology</h3>
+    <p>
+      Once it understands the problem, it presents two or three options for what to build it in, with
+      honest downsides for each, and recommends one. You can accept or override. If you override, your
+      reason gets written down alongside the original recommendation, so in a year you can see why.
+    </p>
+  </div>
+</section>
+
+<!-- 05 -->
+<section id="approve">
+  <span class="secnum">05</span>
+  <h2>The approval gate</h2>
+  <div class="prose">
+    <p>
+      Phase 1 ends with a written specification and a full stop. Claude will not approve its own spec.
+      This is the most valuable twenty minutes in the project, so actually read it.
+    </p>
+
+    <div class="steps two">
+      <div class="step">
+        <span class="k">Check this</span>
+        <h4>Can each requirement be proved?</h4>
+        <p>
+          Every numbered requirement should describe something you could verify. "Fast" is not a
+          requirement. "Returns results in under two minutes for 300,000 files" is.
+        </p>
+      </div>
+      <div class="step">
+        <span class="k">Check this too</span>
+        <h4>Is the non-goals list honest?</h4>
+        <p>
+          This is where scope creep gets prevented. If something you secretly want is listed as a
+          non-goal, say so now. Later is much more expensive.
+        </p>
+      </div>
+    </div>
+
+    <p>
+      When you approve, the spec becomes a <strong>living document</strong>. It can still change, but
+      only by adding a dated amendment explaining what changed and why, never by quietly rewriting
+      history.
+    </p>
+
+    <div class="note go">
+      <h4>What to say</h4>
+      <p>
+        "Approved" is enough. Or list what you want changed first. Then type <code>/forge</code> again
+        and it moves itself to Phase 2.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- 06 -->
+<section id="bench">
+  <span class="secnum">06</span>
+  <h2>Phase two: preparing the bench</h2>
+  <div class="prose">
+    <p>
+      This phase touches your computer, so it is the one most likely to need you. It assumes nothing is
+      installed and checks everything, but only installs what is genuinely missing.
+    </p>
+
+    <div class="steps">
+      <div class="step">
+        <span class="k">Step A</span>
+        <h4>It inventories your machine</h4>
+        <p>Prints one table: what it needs, what you have, what is missing. Then installs the gaps.</p>
+      </div>
+      <div class="step">
+        <span class="k">Step B</span>
+        <h4>It may ask for administrator rights</h4>
+        <p>
+          Claude cannot grant itself admin. If something needs it, you get instructions for opening an
+          elevated window, one block of commands to paste, and a command to run afterwards to prove it
+          worked. It waits, then checks your result rather than taking your word for it.
+        </p>
+      </div>
+      <div class="step">
+        <span class="k">Step C</span>
+        <h4>It proves the safety nets actually work</h4>
+        <p>
+          This is the part people skip and it is the part that matters. It deliberately writes a broken
+          test to confirm the test system reports failures. A test runner that finds nothing usually
+          says "success", and that one silent lie would make every future green tick meaningless.
+        </p>
+      </div>
+      <div class="step">
+        <span class="k">Step D</span>
+        <h4>It asks one question you must answer</h4>
+        <p>
+          <strong>Should the project be public or private?</strong> It will never guess this. Private
+          means only you can see it. If you are unsure, choose private; you can open it up later, but
+          you cannot un-publish something.
+        </p>
+      </div>
+    </div>
+
+    <div class="note">
+      <h4>About that "pre-push check"</h4>
+      <p>
+        Forge installs a guard that runs every time work is saved to the server: it builds the project,
+        runs the tests, and scans for accidentally included passwords. If any fail, the save is
+        refused. It will block you occasionally. That is the point, and Claude is instructed never to
+        force its way past it.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- 07 -->
+<section id="build">
+  <span class="secnum">07</span>
+  <h2>Phase three: building in slices</h2>
+  <div class="prose">
+    <p>
+      Work happens in <strong>slices</strong>. A slice is one complete piece of usable behaviour, not
+      one technical layer. "Scan a folder and print what it found" is a slice. "The database code" is
+      not, because on its own it does nothing you can look at.
+    </p>
+    <p>
+      Hardest slice goes first. That feels backwards, and it is correct: if something is going to turn
+      out impossible, you want to find out on day one, not in week three.
+    </p>
+  </div>
+
+  <div class="figure">
+    <svg viewBox="0 0 900 250" role="img" aria-label="Diagram: the five steps of one slice, from branch to merge">
+      <defs>
+        <marker id="ar2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 z" fill="#6E8CA6"/>
+        </marker>
+      </defs>
+
+      <line x1="30" y1="72" x2="860" y2="72" stroke="#2A5479" stroke-dasharray="3 4"/>
+      <text x="30" y="60" font-family="IBM Plex Mono,monospace" font-size="10" fill="#6E8CA6" letter-spacing="1.5">SAFE COPY OF THE PROJECT</text>
+
+      <g font-family="IBM Plex Sans,sans-serif" font-size="12.5" fill="#A9C0D4">
+        <rect x="30" y="98" width="148" height="76" fill="#0C2740" stroke="#2A5479"/>
+        <text x="44" y="120" font-family="IBM Plex Mono,monospace" font-size="10" fill="#F0C14B">01</text>
+        <text x="44" y="141" fill="#EAF1F7" font-size="13.5">Take a copy</text>
+        <text x="44" y="160">to work in</text>
+
+        <rect x="204" y="98" width="148" height="76" fill="#0C2740" stroke="#2A5479"/>
+        <text x="218" y="120" font-family="IBM Plex Mono,monospace" font-size="10" fill="#F0C14B">02</text>
+        <text x="218" y="141" fill="#EAF1F7" font-size="13.5">Write the test</text>
+        <text x="218" y="160">and watch it fail</text>
+
+        <rect x="378" y="98" width="148" height="76" fill="#0C2740" stroke="#2A5479"/>
+        <text x="392" y="120" font-family="IBM Plex Mono,monospace" font-size="10" fill="#F0C14B">03</text>
+        <text x="392" y="141" fill="#EAF1F7" font-size="13.5">Build until</text>
+        <text x="392" y="160">the test passes</text>
+
+        <rect x="552" y="98" width="148" height="76" fill="#0C2740" stroke="#2A5479"/>
+        <text x="566" y="120" font-family="IBM Plex Mono,monospace" font-size="10" fill="#F0C14B">04</text>
+        <text x="566" y="141" fill="#EAF1F7" font-size="13.5">Write the docs</text>
+        <text x="566" y="160">for this piece</text>
+
+        <rect x="726" y="98" width="148" height="76" fill="#0C2740" stroke="#7FC29B"/>
+        <text x="740" y="120" font-family="IBM Plex Mono,monospace" font-size="10" fill="#7FC29B">05</text>
+        <text x="740" y="141" fill="#EAF1F7" font-size="13.5">Fold it back</text>
+        <text x="740" y="160">into the project</text>
+      </g>
+
+      <line x1="180" y1="136" x2="200" y2="136" stroke="#6E8CA6" marker-end="url(#ar2)"/>
+      <line x1="354" y1="136" x2="374" y2="136" stroke="#6E8CA6" marker-end="url(#ar2)"/>
+      <line x1="528" y1="136" x2="548" y2="136" stroke="#6E8CA6" marker-end="url(#ar2)"/>
+      <line x1="702" y1="136" x2="722" y2="136" stroke="#6E8CA6" marker-end="url(#ar2)"/>
+
+      <path d="M800,178 L800,208 L104,208 L104,178" fill="none" stroke="#2A5479" stroke-dasharray="4 4" marker-end="url(#ar2)"/>
+      <text x="452" y="228" font-family="IBM Plex Mono,monospace" font-size="10" fill="#6E8CA6" text-anchor="middle" letter-spacing="1.5">REPEAT FOR THE NEXT SLICE</text>
+    </svg>
+    <div class="figcap">Fig. 2 &nbsp;/&nbsp; One slice. Step 02 looks strange and is the most important one.</div>
+  </div>
+
+  <div class="prose">
+    <h3>Why write the test before the thing works</h3>
+    <p>
+      Because a test that has never failed has not been shown to test anything. Plenty of tests pass
+      because they check nothing at all, or check the wrong thing entirely, and you cannot tell the
+      difference by reading them. Watching it fail first, then pass, proves it is connected to reality.
+    </p>
+
+    <div class="note stop">
+      <h4>The rule Claude is forbidden to break</h4>
+      <p>
+        It may never make a failing test pass by weakening the test. No deleting it, no skipping it, no
+        loosening what it checks. If a test is genuinely wrong it has to say so and ask you. This is
+        written down explicitly because it is exactly the shortcut anything under pressure reaches for.
+      </p>
+    </div>
+
+    <p>
+      After each slice you get a short report: what works now, what does not yet, what is next. By
+      default it carries straight on to the next slice. If you would rather approve each one, say so
+      and it will wait.
+    </p>
+  </div>
+</section>
+
+<!-- 08 -->
+<section id="blocked">
+  <span class="secnum">08</span>
+  <h2>When it stops you</h2>
+  <div class="prose">
+    <p>
+      Forge blocks things on purpose. A block is not a malfunction, it is the system doing the one job
+      you cannot do by staring at the screen. Here is how to read the common ones.
+    </p>
+
+    <table>
+      <thead><tr><th style="width:34%">What you see</th><th>What it means and what to do</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>A secret was found</strong></td>
+          <td>A password or key is about to be saved into the project history, where it would live forever. Remove it from the file and, if it was ever real, change it. Never bypass this one.</td>
+        </tr>
+        <tr>
+          <td><strong>Tests failed, push refused</strong></td>
+          <td>Something that worked is now broken. Let Claude fix it. Do not ask it to skip the check.</td>
+        </tr>
+        <tr>
+          <td><strong>Cannot release, requirement not covered</strong></td>
+          <td>One of your requirements has no test proving it works. Either it is not actually finished, or it needs a test. Claude will tell you which.</td>
+        </tr>
+        <tr>
+          <td><strong>Typography violation</strong></td>
+          <td>A curly quote or long dash got into a file. Harmless in prose, breaks things in code. Claude fixes it itself.</td>
+        </tr>
+        <tr>
+          <td><strong>Notes disagree with the project</strong></td>
+          <td>Its record of where things stand does not match reality. It stops rather than guessing. Read what it found and tell it which version is right.</td>
+        </tr>
+        <tr>
+          <td><strong>Screenshots missing</strong></td>
+          <td>Documentation needs a picture Claude cannot take, usually of a window on your screen. It tells you exactly which one and what should be visible in it.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note stop">
+      <h4>The one instruction to avoid</h4>
+      <p>
+        Never tell it to skip, bypass, or force past a check. The checks are the whole reason the
+        project stays trustworthy while someone who does not write software is driving it. If a check
+        is genuinely wrong, ask Claude to explain it, then decide.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- 09 -->
+<section id="away">
+  <span class="secnum">09</span>
+  <h2>Walking away and coming back</h2>
+  <div class="prose">
+    <p>
+      Real work gets interrupted. A meeting overruns, the day ends, a fortnight passes. This is the
+      thing Forge is best at, and it needs nothing from you.
+    </p>
+  </div>
+
+  <div class="figure">
+    <svg viewBox="0 0 900 300" role="img" aria-label="Diagram: what survives an interruption and how work resumes">
+      <line x1="60" y1="150" x2="840" y2="150" stroke="#2A5479"/>
+
+      <circle cx="130" cy="150" r="6" fill="#0C2740" stroke="#7FC29B" stroke-width="2"/>
+      <text x="130" y="130" font-family="IBM Plex Mono,monospace" font-size="10" fill="#7FC29B" text-anchor="middle" letter-spacing="1">WORKING</text>
+      <text x="130" y="180" font-family="IBM Plex Sans,sans-serif" font-size="12" fill="#A9C0D4" text-anchor="middle">Halfway through</text>
+      <text x="130" y="197" font-family="IBM Plex Sans,sans-serif" font-size="12" fill="#A9C0D4" text-anchor="middle">a slice</text>
+
+      <circle cx="360" cy="150" r="6" fill="#0C2740" stroke="#E06A63" stroke-width="2"/>
+      <text x="360" y="130" font-family="IBM Plex Mono,monospace" font-size="10" fill="#E06A63" text-anchor="middle" letter-spacing="1">INTERRUPTED</text>
+      <text x="360" y="180" font-family="IBM Plex Sans,sans-serif" font-size="12" fill="#A9C0D4" text-anchor="middle">You close the laptop.</text>
+      <text x="360" y="197" font-family="IBM Plex Sans,sans-serif" font-size="12" fill="#A9C0D4" text-anchor="middle">Nothing is announced.</text>
+
+      <rect x="252" y="222" width="216" height="52" fill="#0C2740" stroke="#2A5479"/>
+      <text x="360" y="243" font-family="IBM Plex Mono,monospace" font-size="9.5" fill="#F0C14B" text-anchor="middle" letter-spacing="1.2">WRITTEN DOWN BEFORE THIS</text>
+      <text x="360" y="262" font-family="IBM Plex Sans,sans-serif" font-size="11.5" fill="#A9C0D4" text-anchor="middle">exact file, line, and next step</text>
+
+      <circle cx="620" cy="150" r="6" fill="#0C2740" stroke="#F0C14B" stroke-width="2"/>
+      <text x="620" y="130" font-family="IBM Plex Mono,monospace" font-size="10" fill="#F0C14B" text-anchor="middle" letter-spacing="1">TWO WEEKS LATER</text>
+      <text x="620" y="180" font-family="IBM Plex Sans,sans-serif" font-size="12" fill="#A9C0D4" text-anchor="middle">New window. You type</text>
+      <text x="620" y="199" font-family="IBM Plex Mono,monospace" font-size="12" fill="#F0C14B" text-anchor="middle">please continue</text>
+
+      <circle cx="812" cy="150" r="6" fill="#7FC29B"/>
+      <text x="812" y="130" font-family="IBM Plex Mono,monospace" font-size="10" fill="#7FC29B" text-anchor="middle" letter-spacing="1">RESUMED</text>
+      <text x="812" y="180" font-family="IBM Plex Sans,sans-serif" font-size="12" fill="#A9C0D4" text-anchor="middle">Checks notes</text>
+      <text x="812" y="197" font-family="IBM Plex Sans,sans-serif" font-size="12" fill="#A9C0D4" text-anchor="middle">against reality</text>
+
+      <text x="60" y="52" font-family="Barlow Condensed,sans-serif" font-size="19" fill="#EAF1F7">NOTHING IS LOST, AND NOTHING IS ASSUMED</text>
+      <text x="60" y="76" font-family="IBM Plex Sans,sans-serif" font-size="12.5" fill="#6E8CA6">The notes are only trusted after they are checked against the real state of the files.</text>
+    </svg>
+    <div class="figcap">Fig. 3 &nbsp;/&nbsp; Interruption and recovery. The check on the right is the part that matters.</div>
+  </div>
+
+  <div class="prose">
+    <p>
+      Claude keeps a file called <code>CONTINUE.md</code> that always describes exactly where things
+      stand and what the very next action is. It updates it before starting anything risky, not
+      afterwards, so an interruption cannot catch it out.
+    </p>
+    <p>
+      When you return, that file is loaded automatically before you say a word. Then, crucially, it
+      <strong>checks the notes against the actual project</strong>. If the notes claim two tests are
+      failing but three are, it says so and asks you rather than carrying on from a false picture.
+    </p>
+    <div class="note go">
+      <h4>All you ever have to type</h4>
+      <p><code>please continue</code> or <code>/forge</code>. Either works. You never have to remember what you were doing.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="ship">
+  <span class="secnum">10</span>
+  <h2>Shipping it</h2>
+  <div class="prose">
+    <p>
+      A <strong>release</strong> is a numbered, frozen snapshot you can point people at. Forge cuts the
+      first one as soon as anything works end to end, then again after each meaningful addition, rather
+      than saving them all up for a big finish.
+    </p>
+
+    <table>
+      <thead><tr><th style="width:20%">Version</th><th>What it signals</th></tr></thead>
+      <tbody>
+        <tr><td><code>v0.1.0</code></td><td>First thing that genuinely works, even if small</td></tr>
+        <tr><td><code>v0.2.0</code></td><td>A meaningful new capability</td></tr>
+        <tr><td><code>v0.2.1</code></td><td>A fix, nothing new</td></tr>
+        <tr><td><code>v1.0.0</code></td><td>Every requirement done, and every one proved by a passing test</td></tr>
+      </tbody>
+    </table>
+
+    <p>
+      Before any release, Claude switches out of autopilot and asks. It also refuses to cut version 1.0
+      until every single requirement in your spec has a test proving it works. Not "the code exists",
+      but "here is the check that demonstrates it".
+    </p>
+
+    <p>
+      Each release comes with a plain-language paragraph saying what this version proves the tool can
+      now do. That paragraph is what you will actually read in six months when you are trying to
+      remember where you got to.
+    </p>
+  </div>
+</section>
+
+<!-- 11 -->
+<section id="files">
+  <span class="secnum">11</span>
+  <h2>The files that appear in your project</h2>
+  <div class="prose">
+    <p>Forge creates these. You never have to edit them, but knowing what they are helps.</p>
+    <table>
+      <thead><tr><th style="width:30%">File</th><th>What it is</th></tr></thead>
+      <tbody>
+        <tr><td><code>CONTINUE.md</code></td><td>Where things stand right now. The one that makes "please continue" work.</td></tr>
+        <tr><td><code>TODO.md</code></td><td>What is planned, what is being done, what is finished.</td></tr>
+        <tr><td><code>docs/SRS.md</code></td><td>The specification you approved. The source of truth for what is being built.</td></tr>
+        <tr><td><code>docs/DECISIONS.md</code></td><td>Every choice made and why. Read this when you wonder "why on earth did we do it that way".</td></tr>
+        <tr><td><code>docs/ENVIRONMENT.md</code></td><td>What is installed on your machine and what versions. How you would set this up again.</td></tr>
+        <tr><td><code>docs/traceability.md</code></td><td>A grid matching every requirement to the test that proves it.</td></tr>
+        <tr><td><code>CHANGELOG.md</code></td><td>What changed in each release, written automatically.</td></tr>
+        <tr><td><code>README.md</code></td><td>How to install and use the thing you built. Written for someone who has never seen it.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 12 -->
+<section id="words">
+  <span class="secnum">12</span>
+  <h2>Plain-English words</h2>
+  <div class="prose">
+    <p>
+      The vocabulary you will meet, without the jargon. Terms are underlined
+      <button class="term" data-t="repository" data-d="A folder containing your project plus its complete history. Every version of every file, forever. Usually shortened to 'repo'.">like this</button>
+      throughout the page, so you can check one without leaving your place.
+    </p>
+
+    <table>
+      <thead><tr><th style="width:26%">Word</th><th>What it actually means</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Repository</strong></td><td>Your project folder plus its full history. Every version of every file is kept, so nothing is ever truly lost.</td></tr>
+        <tr><td><strong>Commit</strong></td><td>A saved checkpoint with a note explaining what changed. Like a save point in a game.</td></tr>
+        <tr><td><strong>Branch</strong></td><td>A safe copy to experiment in. If it goes badly you throw the copy away and the real project was never touched.</td></tr>
+        <tr><td><strong>Merge</strong></td><td>Folding a finished branch back into the real project.</td></tr>
+        <tr><td><strong>Push</strong></td><td>Sending your saved work up to the server so it exists somewhere other than your laptop.</td></tr>
+        <tr><td><strong>GitHub</strong></td><td>The server where the project lives. Also your offsite backup.</td></tr>
+        <tr><td><strong>Test</strong></td><td>A small program that checks your program. It either passes or fails, no interpretation needed.</td></tr>
+        <tr><td><strong>Test suite</strong></td><td>All the tests, run together. "Green" means everything passed.</td></tr>
+        <tr><td><strong>CI</strong></td><td>A robot on the server that rebuilds the project and runs every test after each change, on a clean machine, in case something only worked on yours.</td></tr>
+        <tr><td><strong>Hook</strong></td><td>An automatic check that fires at a set moment, like just before saving to the server.</td></tr>
+        <tr><td><strong>Coverage</strong></td><td>How much of your code the tests actually run. Useful for spotting untested areas, not a measure of quality.</td></tr>
+        <tr><td><strong>Slice</strong></td><td>One complete piece of working behaviour, built and tested end to end.</td></tr>
+        <tr><td><strong>Release / tag</strong></td><td>A numbered, frozen snapshot. Tags never move once created.</td></tr>
+        <tr><td><strong>Spec / SRS</strong></td><td>The written description of what is being built, agreed before building starts.</td></tr>
+        <tr><td><strong>Requirement</strong></td><td>One numbered, provable statement of something the tool must do.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 13 -->
+<section id="card">
+  <span class="secnum">13</span>
+  <h2>Quick reference</h2>
+
+  <div class="steps two">
+    <div class="step">
+      <span class="k">Everything you type</span>
+      <h4>Commands</h4>
+      <table style="margin-top:.6rem">
+        <tbody>
+          <tr><td><code>/forge</code></td><td>Start, or carry on. The only one you need.</td></tr>
+          <tr><td><code>please continue</code></td><td>Same thing, in plain words.</td></tr>
+          <tr><td><code>/forge-spec</code></td><td>Force the describing phase.</td></tr>
+          <tr><td><code>/forge-env</code></td><td>Force the setup phase.</td></tr>
+          <tr><td><code>/forge-code</code></td><td>Force the building phase.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="step">
+      <span class="k">Useful things to say</span>
+      <h4>Phrases</h4>
+      <table style="margin-top:.6rem">
+        <tbody>
+          <tr><td><em>"Approved"</em></td><td>Passes a gate.</td></tr>
+          <tr><td><em>"Explain that"</em></td><td>Any term or decision, in more detail.</td></tr>
+          <tr><td><em>"Wait for me each slice"</em></td><td>Switches off autopilot.</td></tr>
+          <tr><td><em>"Where are we?"</em></td><td>Status without doing any work.</td></tr>
+          <tr><td><em>"Why did we decide that?"</em></td><td>It looks it up in the decisions log.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="prose">
+    <div class="note stop" style="margin-top:2rem">
+      <h4>Never say these</h4>
+      <p>
+        "Skip the tests." "Force the push." "Bypass the check." "Just make it pass." Each one removes a
+        safety net that exists precisely because nobody is reviewing the code but the machine that
+        wrote it.
+      </p>
+    </div>
+
+    <h3 style="margin-top:2.6rem">If you only remember four things</h3>
+    <ul class="plain">
+      <li><strong>Type <code>/forge</code>.</strong> It figures out the rest.</li>
+      <li><strong>Read the spec before approving it.</strong> Twenty minutes there saves days later.</li>
+      <li><strong>A block is the system working.</strong> Never ask it to bypass one.</li>
+      <li><strong>You can leave at any moment.</strong> Come back and say "please continue".</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+</div>
+</div>
+
+<footer>
+  <div class="sheet">FORGE &nbsp;/&nbsp; GUIDE FOR NON-DEVELOPERS &nbsp;/&nbsp; SHEET 1 OF 1</div>
+</footer>
+
+</div>
+
+<div id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // Ladder rungs
+  document.querySelectorAll(".rung").forEach(function(b){
+    b.addEventListener("click",function(){
+      var open = b.getAttribute("aria-expanded") === "true";
+      b.setAttribute("aria-expanded", open ? "false" : "true");
+    });
+  });
+
+  // Scroll spy on the phase rail
+  var links = Array.prototype.slice.call(document.querySelectorAll(".rail a"));
+  var map = {};
+  links.forEach(function(a){ map[a.getAttribute("href").slice(1)] = a; });
+
+  var sections = Array.prototype.slice.call(document.querySelectorAll("section[id]"));
+  if ("IntersectionObserver" in window && sections.length){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (!e.isIntersecting) return;
+        links.forEach(function(a){ a.classList.remove("on"); });
+        var a = map[e.target.id];
+        if (a) a.classList.add("on");
+      });
+    }, { rootMargin: "-15% 0px -70% 0px", threshold: 0 });
+    sections.forEach(function(s){ io.observe(s); });
+  }
+
+  // Inline glossary
+  var tip = document.getElementById("tip");
+  function hide(){ tip.style.display = "none"; }
+  function show(btn){
+    tip.innerHTML = "";
+    var h = document.createElement("strong");
+    h.textContent = btn.getAttribute("data-t");
+    var p = document.createElement("span");
+    p.textContent = btn.getAttribute("data-d");
+    tip.appendChild(h); tip.appendChild(p);
+    tip.style.display = "block";
+
+    var r = btn.getBoundingClientRect();
+    var w = tip.offsetWidth;
+    var left = r.left + window.scrollX;
+    if (left + w > window.innerWidth - 16) left = window.innerWidth - w - 16;
+    if (left < 12) left = 12;
+    tip.style.left = left + "px";
+    tip.style.top = (r.bottom + window.scrollY + 8) + "px";
+  }
+
+  document.querySelectorAll(".term").forEach(function(btn){
+    btn.addEventListener("mouseenter", function(){ show(btn); });
+    btn.addEventListener("focus", function(){ show(btn); });
+    btn.addEventListener("mouseleave", hide);
+    btn.addEventListener("blur", hide);
+  });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape") hide(); });
+  window.addEventListener("scroll", hide, { passive: true });
+})();
+</script>
+</body>
+</html>

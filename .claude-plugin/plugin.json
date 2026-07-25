@@ -1,0 +1,12 @@
+{
+  "name": "forge-workflow",
+  "displayName": "Forge",
+  "version": "0.1.0",
+  "description": "Gated spec-to-ship lifecycle for Claude Code. One command determines where a project stands and does the next thing: requirements discovery to 95 percent confidence, toolchain and repository bootstrap, then test-driven implementation with enforced resumability, documentation drift gates, and tagged releases.",
+  "author": {
+    "name": "Dailen Gunter",
+    "email": "me@dailen.net"
+  },
+  "license": "MIT",
+  "keywords": ["lifecycle", "requirements", "workflow", "testing", "documentation"]
+}

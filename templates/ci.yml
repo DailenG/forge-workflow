@@ -1,0 +1,110 @@
+# CI for the SRS workflow.
+#
+# This is the SECOND line of defense. The pre-push hook is the first, because
+# with no pull request review, code that reaches main is already on main.
+# CI catches what the local hook could not: clean-machine reproducibility,
+# a different OS, and anything the developer's environment was hiding.
+#
+# Replace every <placeholder> during Phase 2 bootstrap.
+
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up toolchain
+        run: echo "<toolchain setup, pinned to the version in docs/ENVIRONMENT.md>"
+
+      - name: Install dependencies
+        run: echo "<install from lockfile, not a resolving install>"
+
+      - name: Lint
+        run: echo "<lint command>"
+
+      - name: Build
+        run: echo "<build command>"
+
+      - name: Test
+        run: echo "<test command, with coverage output>"
+
+      # A runner that discovers zero tests usually exits 0. Fail loudly instead
+      # of reporting a green build on an empty suite.
+      - name: Assert tests actually ran
+        run: |
+          echo "<assert the reported test count is above the expected minimum>"
+
+      - name: Coverage report
+        run: echo "<publish coverage; fail if below the floor set in the SRS>"
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: <coverage output path>
+          if-no-files-found: warn
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up toolchain
+        run: echo "<toolchain setup>"
+
+      - name: Generate API reference
+        run: echo "<TypeDoc / Sphinx / rustdoc / godoc / DocFX / platyPS>"
+
+      # Fails if generated reference docs differ from what is committed, which
+      # means someone changed public API without regenerating.
+      - name: Assert generated docs are current
+        run: |
+          git diff --exit-code -- <generated docs path> || {
+            echo "Generated API reference is out of date. Regenerate and commit."
+            exit 1
+          }
+
+      - name: Link check
+        run: echo "<lychee or equivalent across docs/ and README.md>"
+
+      # STUB until Phase 3 implements it. Replace in the first slice that
+      # produces public API surface.
+      #
+      # Real implementation: read docs/docs-manifest.yml, query the CodeGraph
+      # index for each listed symbol, compare live signatures against recorded
+      # ones, and fail when a documented symbol changed but its page did not.
+      - name: Documentation drift gate
+        run: |
+          echo "TODO(phase-3): implement the docs drift gate against docs/docs-manifest.yml"
+          exit 0
+
+      # Docs must not reference images that do not exist.
+      - name: Assert no missing screenshots
+        run: |
+          echo "<fail if docs/images/MANIFEST.md contains MISSING or STALE rows>"
+
+  traceability:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Guards the release rule: v1.0.0 requires every FR covered by a passing
+      # test. Warns before 1.0.0, fails at and after it.
+      - name: Check requirement traceability
+        run: |
+          echo "<parse docs/traceability.md; report any FR row not COVERED>"
+          echo "<if the current tag is >= v1.0.0, exit 1 on any uncovered FR>"
