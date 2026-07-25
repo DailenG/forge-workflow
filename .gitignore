@@ -26,3 +26,8 @@ $RECYCLE.BIN/
 *~
 *.sublime-workspace
 *.sublime-project
+
+# Personal, non-shared project instructions. Never commit these.
+# CLAUDE.md is committed and shared; CLAUDE.local.md is yours alone.
+CLAUDE.local.md
+*.local.md
