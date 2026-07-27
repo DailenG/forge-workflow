@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
-  "name": "dailen",
-  "description": "Dailen Gunter's Claude Code plugins.",
+  "name": "dailen-dev",
+  "description": "Local development marketplace for the forge-workflow plugin. The published catalog is the dailen marketplace at DailenG/dailens-claude-toolbelt.",
   "owner": {
     "name": "Dailen Gunter",
     "email": "me@dailen.net"

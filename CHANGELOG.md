@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The `dailen` marketplace now lives in a dedicated catalog repository,
+  `DailenG/dailens-claude-toolbelt`, which references this plugin by an external
+  https source. Install is now `claude plugin marketplace add DailenG/dailens-claude-toolbelt`
+  then `claude plugin install forge-workflow@dailen`. This repository's own
+  `marketplace.json` is renamed to `dailen-dev` and is for local development only.
+  No plugin behavior changed, so no version bump. Existing users who added the old
+  `DailenG/forge-workflow` marketplace should re-point to the catalog (see README).
+
 ## [0.1.0] - 2026-07-25
 
 Initial public release.

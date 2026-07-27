@@ -18,9 +18,12 @@ This is the source of the **forge-workflow** Claude Code plugin.
 
 - Plugin name: `forge-workflow` (see `.claude-plugin/plugin.json`)
 - Published at: https://github.com/DailenG/forge-workflow
-- Marketplace name: `dailen` (see `.claude-plugin/marketplace.json`)
-- Users install with `claude plugin marketplace add DailenG/forge-workflow` then
-  `claude plugin install forge-workflow@dailen`
+- Published marketplace: the `dailen` catalog lives in a SEPARATE repo,
+  `DailenG/dailens-claude-toolbelt`, which references this plugin by an external
+  https `url` source. This repo's own `.claude-plugin/marketplace.json` is named
+  `dailen-dev` and exists only for local testing (see the development loop below).
+- Users install with `claude plugin marketplace add DailenG/dailens-claude-toolbelt`
+  then `claude plugin install forge-workflow@dailen`
 - Hosted guide: https://daileng.github.io/forge-workflow/ (served from `docs/`)
 
 The plugin ships four user commands (`/forge`, `/forge-spec`, `/forge-env`,
@@ -56,7 +59,7 @@ edits to the skills must preserve it.
 ```
 .claude-plugin/
   plugin.json          plugin manifest (name, version, author)
-  marketplace.json     marketplace catalog (name "dailen", plugin source "./")
+  marketplace.json     LOCAL DEV marketplace (name "dailen-dev", plugin source "./")
 skills/                the five skills (forge, forge-spec, forge-env, forge-code, forge-standards)
 hooks/hooks.json       SessionStart, PreToolUse, PostToolUse, Stop wiring
 scripts/*.js           the four Node hook scripts
@@ -73,17 +76,16 @@ docs/index.html        the hosted guide (GitHub Pages, main branch /docs)
 lives under `~/.claude/plugins/cache/dailen/forge-workflow/<version>/` and is
 overwritten on every update, so edits there are lost.
 
-The published `forge-workflow@dailen` and a local dev copy share the same plugin
-name, and only one copy of a name can load at a time. The cleanest way to test
-local edits is to point the `dailen` marketplace at this clone, then point it back
-when done. A local marketplace whose `name` matches an already-registered one
-replaces that registration.
+This repo's `marketplace.json` is named `dailen-dev`, distinct from the published
+`dailen` catalog, so registering it for local testing does NOT clobber your
+installed `forge-workflow@dailen`. The published and local copies share the plugin
+NAME (`forge-workflow`), and only one copy of a name loads at a time, so uninstall
+the published one while testing local edits, then reinstall it when done.
 
 ```powershell
-# switch to testing local edits (this repo's marketplace.json is also named "dailen",
-# so this replaces the GitHub-sourced registration)
-claude plugin marketplace remove dailen
+# register this clone as the dailen-dev marketplace and install from it
 claude plugin marketplace add "C:/Syncs/Resilio/Code/GitHub/daileng/forge/forge-workflow"
+claude plugin install forge-workflow@dailen-dev
 
 # iterate:
 #   - edits to skills/**/SKILL.md take effect on the next turn (hot)
@@ -91,11 +93,11 @@ claude plugin marketplace add "C:/Syncs/Resilio/Code/GitHub/daileng/forge/forge-
 /reload-plugins
 
 # refresh the registered copy after edits, then reload if you touched hooks/scripts
-claude plugin marketplace update dailen
+claude plugin marketplace update dailen-dev
 
-# when finished, switch back to the published version
-claude plugin marketplace remove dailen
-claude plugin marketplace add DailenG/forge-workflow
+# when finished, switch back to the published catalog
+claude plugin marketplace remove dailen-dev
+claude plugin marketplace update dailen
 claude plugin install forge-workflow@dailen
 ```
 

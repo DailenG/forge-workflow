@@ -12,11 +12,11 @@ Thanks for helping improve Forge. This is a Claude Code plugin (skills plus hook
 
    This checks `marketplace.json` and `plugin.json`, the skill frontmatter, and `hooks/hooks.json`. It must pass with no errors before you open a pull request.
 
-2. **Load your working copy.** Point Claude Code at your checkout rather than the published marketplace so you test the exact files you edited:
+2. **Load your working copy.** Point Claude Code at your checkout rather than the published marketplace so you test the exact files you edited. This repository's `marketplace.json` is named `dailen-dev` (the published catalog is the separate `dailen` marketplace), so install from `@dailen-dev`:
 
    ```
    claude plugin marketplace add ./
-   claude plugin install forge-workflow@dailen
+   claude plugin install forge-workflow@dailen-dev
    ```
 
    On Linux and macOS, make the hook scripts executable first: `chmod +x scripts/*.js`.

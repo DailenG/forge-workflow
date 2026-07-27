@@ -23,13 +23,21 @@ It explains what Forge does, what each phase feels like, and what lands in your 
 Two commands. The first tells Claude Code where to find the catalog; the second installs the plugin.
 
 ```
-claude plugin marketplace add DailenG/forge-workflow
+claude plugin marketplace add DailenG/dailens-claude-toolbelt
 claude plugin install forge-workflow@dailen
 ```
 
 Confirm when prompted, then run `/reload-plugins` or restart Claude Code. Type `/` and you should see `forge` in the list. When a new version ships later, `claude plugin marketplace update dailen` pulls it down.
 
-> Add the marketplace by the `DailenG/forge-workflow` shorthand shown above, which clones the whole repository so the plugin resolves correctly. Do not add it by a direct link to the raw `marketplace.json` file: a URL-only marketplace downloads just that one file, and this plugin's relative `./` source will not resolve.
+> Forge is distributed through the `dailen` marketplace catalog at `DailenG/dailens-claude-toolbelt`. Add the marketplace by that shorthand, which clones the catalog so the plugin resolves correctly. Do not add it by a direct link to the raw `marketplace.json` file: a URL-only marketplace downloads just that one file and cannot resolve the plugin source.
+
+Installed an earlier version by adding `DailenG/forge-workflow` as the marketplace? Point Claude Code at the catalog instead:
+
+```
+claude plugin marketplace remove dailen
+claude plugin marketplace add DailenG/dailens-claude-toolbelt
+claude plugin install forge-workflow@dailen
+```
 
 ## Install (manual)
 
