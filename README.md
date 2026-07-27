@@ -110,7 +110,18 @@ If you are on macOS or Linux, Forge still works, but you will need to translate 
 - The docs drift gate needs per-project tuning. Signature comparison is clean in typed languages and awkward in dynamic ones.
 - The Stop hook warns rather than blocks, so a session can still end with unrecorded state. The SessionStart hook catches it next time.
 - The detection ladder is only as good as the `Phase` and `Gate` fields in `CONTINUE.md`. A stale gate would route the next session into the wrong phase, which is why `/forge` reconciles against git rather than trusting the file alone.
-- Forge has had a partial shakedown, not a complete one. That is why it ships as `0.1.0`.
+- Forge is tuned for Claude 5 era models, whose instruction following and self-verification the prompts now assume. On older models the leaner prompts are less defensive; use `forge4-workflow` there instead.
+
+## Two editions
+
+Forge's prompts are written for the model generation they target, because the styles are not interchangeable.
+
+| Edition | Command | For |
+|---|---|---|
+| **`forge-workflow`** (this one) | `/forge` | Claude 5 era models. Lean prompts, actively developed |
+| `forge4-workflow` | `/forge4` | Claude 4 era models. Frozen Claude 4 snapshot with the original defensive prompting |
+
+Both enforce the same gates and produce the same project files. If you are on a current Claude model, use this one.
 
 ## License and author
 

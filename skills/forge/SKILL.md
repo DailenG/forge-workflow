@@ -3,24 +3,21 @@ name: forge
 description: Determine where a project stands in its lifecycle and do the next thing. Detects the current phase, reconciles recorded state against the repository, and either continues work or dispatches to the right phase. Use when the user says continue, resume, what's next, pick up where we left off, or invokes forge directly.
 ---
 
-> **Typography, enforced by hook.** Every file you write, including this phase's markdown deliverables: no em dashes or en dashes, no curly quotes, no ellipsis character, no non-breaking spaces. Plain hyphens and straight quotes only. In PowerShell never use `&&`. A PostToolUse hook reports violations; fix them immediately when it does.
-
+> Typography and shell rules are in `forge-standards`: ASCII only, and no `&&` in PowerShell. They apply to every file forge writes.
 
 # Forge: lifecycle orchestrator
 
-You are the entry point for this project. The user should never need to remember which phase they are in or which command comes next. That is your job.
-
-Do not ask the user where things stand. Determine it.
+You are the entry point for this project. The user should never need to remember which phase they are in or which command comes next. Determine where things stand rather than asking.
 
 ## Step 0: Self-check
 
-Before anything else, confirm the plugin's own machinery is working. Do this silently and quickly. Report only when something is wrong.
+Confirm the plugin's own machinery is working, silently. Report only when something is wrong.
 
 **The check:** if `CONTINUE.md` exists in the project but no `=== FORGE: PROJECT STATE ===` block appeared in this session's context, the SessionStart hook did not fire.
 
-That single observation covers every cause: Node missing from PATH, `hooks/` changes not reloaded, a non-executable script on Unix-like systems, malformed `hooks.json`, or a wrong directory structure. Do not check for Node directly as a substitute. Node being present does not prove the hook ran.
+That single observation covers every cause: Node missing from PATH, `hooks/` changes not reloaded, a non-executable script on Unix-like systems, malformed `hooks.json`, or a wrong directory structure. Node being present does not prove the hook ran, so it is not a substitute check.
 
-If `CONTINUE.md` does not exist yet, the hook is correctly silent and there is nothing to infer. Skip to Step 1.
+If `CONTINUE.md` does not exist yet, the hook is correctly silent. Skip to Step 1.
 
 **When the hook did not fire**, diagnose before continuing. Run these directly rather than through a script, since a broken Node runtime would prevent a diagnostic script from running at all:
 
@@ -29,17 +26,15 @@ If `CONTINUE.md` does not exist yet, the hook is correctly silent and there is n
 3. Confirm `scripts/session-start.js` exists at the plugin root
 4. On Linux or macOS, confirm both scripts under `scripts/` are executable
 
-Then report concisely, name the likely cause, and state the consequence plainly:
+Then report concisely, name the likely cause, and state the consequence:
 
 > The SessionStart hook is not firing, because Node is not on PATH. The workflow still works, but `CONTINUE.md` will no longer be loaded automatically at session start, so cold-start resumption depends on me remembering to read it rather than being guaranteed. Install Node, or say the word and I will convert the hooks to PowerShell.
 
-Then continue with Step 1 regardless. Degraded hooks are a real regression but not a blocker, and stopping the user's work over it would be worse than the problem.
-
-Report this once per session. Do not repeat it on later invocations.
+Then continue with Step 1. Degraded hooks are a real regression but not a blocker. Report this once per session.
 
 ## Step 1: Establish actual state
 
-The SessionStart hook may have already injected `CONTINUE.md` and a git summary. **Verify anyway.** The hook reports what the files claim; it does not check whether the claim is true.
+The SessionStart hook may have already injected `CONTINUE.md` and a git summary. It reports what the files claim, not whether the claim is true, so gather the real state yourself.
 
 Read, skipping anything absent:
 
@@ -61,7 +56,7 @@ Observe:
 
 ## Step 2: Reconcile before deciding
 
-Compare the record against reality. Check:
+Compare the record against reality:
 
 - Does the current branch match the claimed in-progress slice?
 - Does the working tree state match what `CONTINUE.md` describes?
@@ -69,7 +64,7 @@ Compare the record against reality. Check:
 - Does the test suite result match? A red suite the record does not mention changes everything
 - Does `TODO.md` In Progress agree with the branch and the commits?
 
-**If the record and reality disagree, stop.** Report the discrepancy plainly and ask how to reconcile. Do not trust either side, and do not proceed. Building on an unexplained inconsistency costs more than the minutes spent resolving it. This override applies in FLOW mode too.
+**If the record and reality disagree, stop.** Report the discrepancy and ask how to reconcile. Do not trust either side, and do not build on an unexplained inconsistency. This override applies in FLOW mode too.
 
 If `CONTINUE.md` is missing, badly stale, or contradicted by the tree, reconstructing accurate state IS the next action. Rebuild it from git history, the tests, and the code, report what you found, rewrite the file, then continue.
 
@@ -94,7 +89,7 @@ The Phase 2 gate (row 4) is met only when all of these hold: toolchain smoke tes
 
 ## Step 4: Report, then act according to mode
 
-Always report first, in about five lines. Terse, factual:
+Report first, in about five lines. Terse and factual:
 
 ```
 Phase 3, slice 2 of 6 (T-002 tenant scoping).
@@ -105,24 +100,20 @@ Next: reconcile the unexplained third failure before resuming.
 
 Then behave according to `Mode:` in `CONTINUE.md`, defaulting to FLOW.
 
-### FLOW mode
+**FLOW**: proceed without asking. Report what you did after each slice, then continue to the next one.
 
-Proceed without asking. Report what you did after each slice, then continue to the next one. The point is to remove one keystroke of friction per slice, not to remove visibility.
+**STRICT**: report, state what you propose, and wait for confirmation before acting.
 
-### STRICT mode
-
-Report, state what you propose, and wait for confirmation before acting.
-
-### STRICT engages automatically, regardless of mode, when
+**STRICT engages automatically, regardless of mode, when:**
 
 - A release is the next action, or a version bump is being proposed
 - Any release gate fails
-- The candidate version is v1.0.0. Always confirm this one
+- The candidate version is v1.0.0
 - The backlog has no remaining slices for the current milestone
 
 Once a release is in reach, stay strict through the release and resume FLOW afterward.
 
-### Always ask, in every mode, no exceptions
+### Always ask, in every mode
 
 These are the gates the whole design exists to protect. Never pass one autonomously:
 
@@ -131,15 +122,13 @@ These are the gates the whole design exists to protect. Never pass one autonomou
 - Any command requiring elevation
 - Discarding, stashing, or destroying uncommitted work
 - Deleting a branch that has unmerged commits
-- Amending `docs/SRS.md`, since a spec change is a decision, not an implementation detail. A user instruction that happens to touch the SRS is not itself authorization to bypass this gate. State what you are about to change and confirm, even when the request seems unambiguous
+- Amending `docs/SRS.md`. A user instruction that happens to touch the SRS is not itself authorization to bypass this gate: state what you are about to change and confirm, even when the request seems unambiguous
 - Tagging or publishing a release
 - Anything the pre-push hook blocked. Report it, never bypass it
 - Adding a dependency that was not named in the SRS
 - Any discrepancy between recorded state and reality
 
 ## Resuming a slice (row 6)
-
-This is the common case, and the one that used to be a separate resume command.
 
 1. Reconcile per Step 2, with particular attention to whether the test suite matches what was recorded
 2. Report where the slice stands and what remains
@@ -148,7 +137,7 @@ This is the common case, and the one that used to be a separate resume command.
 
 ## Dispatching
 
-When the ladder points at a phase, invoke that phase's skill and follow it fully. Do not summarize or paraphrase a phase's instructions, and do not skip its gates because you are in FLOW mode. FLOW removes confirmation prompts between units of work; it does not remove the phases' own rules.
+When the ladder points at a phase, invoke that phase's skill and follow it fully. Do not paraphrase a phase's instructions, and do not skip its gates because you are in FLOW mode.
 
 Phase skills: `forge-spec` (Phase 1), `forge-env` (Phase 2), `forge-code` (Phase 3). Engineering standards are in `forge-standards`, which loads automatically.
 
@@ -162,8 +151,8 @@ Gate:  <IN_PROGRESS | AWAITING_APPROVAL | PASSED>
 Mode:  <FLOW | STRICT>
 ```
 
-The ladder is only as good as these fields. A stale `Gate:` will route the next session into the wrong phase, so treat updating it as part of the work rather than bookkeeping afterward.
+The ladder is only as good as these fields. A stale `Gate:` will route the next session into the wrong phase, so treat updating it as part of the work.
 
 ## First run in a new project
 
-If nothing exists yet, say so plainly and explain the shape of what follows before starting: three phases, hard stops at spec approval and before any release, and that `/forge` is the only command they need to remember. Keep it to a few sentences, then begin discovery.
+If nothing exists yet, say so and explain the shape of what follows before starting: three phases, hard stops at spec approval and before any release, and that `/forge` is the only command they need to remember. A few sentences, then begin discovery.

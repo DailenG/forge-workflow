@@ -137,6 +137,34 @@ Full contributor detail is in `CONTRIBUTING.md`.
 
 ---
 
+## Prompting style: lean, for Claude 5
+
+As of 1.0.0 the skills are written for Claude 5 era models. That generation follows
+instructions well and verifies its own work, so Claude 4 era defensive scaffolding
+actively costs quality and tokens. Anthropic's guidance is in
+[Prompting Claude Opus 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5).
+
+When editing a skill, do not reintroduce:
+
+- Self-verification or re-check instructions. The model already does this, and telling
+  it to compounds into over-verification.
+- Speculative guards for failure modes nobody has actually observed.
+- Absolute bans whose job is babysitting the model. Prefer adaptive, falsifiable
+  guidance ("match the comment density of the surrounding code").
+- The same rule restated in a second skill. Say it once, in the skill that owns it.
+- "Be conservative" or "only report high-severity" hedges in a review or audit step.
+  Claude 5 takes them literally and does less. Ask for everything and filter after.
+- Few-shot examples that only teach tool usage. A schema or enum is shorter and clearer.
+
+The distinction that matters: **a rule protecting the user's repository, money, or
+safety stays; a rule babysitting the model goes.** "SRS approval is an always-strict
+gate" is the former. "Always double-check your work" is the latter. When unsure, keep
+it and note why.
+
+The Claude 4 era style is preserved deliberately in the separate frozen
+`forge4-workflow` repo (`/forge4`). Do not port changes between the two editions
+without deciding which style the target expects.
+
 ## Hard rules when editing this repo
 
 - **ASCII typography only.** No em dashes, en dashes, curly quotes, ellipsis
