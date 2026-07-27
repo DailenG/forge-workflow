@@ -264,7 +264,7 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
       <div><span>Audience</span><b>Technical, not a developer</b></div>
       <div><span>Runs in</span><b>Claude Code</b></div>
       <div><span>Reading time</span><b>About 20 minutes</b></div>
-      <div><span>Prerequisite</span><b>None beyond install</b></div>
+      <div><span>Edition</span><b>v1.0.0 &nbsp;/&nbsp; for Claude 5</b></div>
     </div>
   </div>
 </header>
@@ -277,25 +277,40 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
     <li class="grp">Orientation</li>
     <li><a href="#what">01 &nbsp;What this is</a></li>
     <li><a href="#model">02 &nbsp;The mental model</a></li>
-    <li><a href="#install">03 &nbsp;Setting it up</a></li>
+    <li><a href="#edition">03 &nbsp;Which edition</a></li>
+    <li><a href="#install">04 &nbsp;Setting it up</a></li>
     <li class="grp">Phase one</li>
-    <li><a href="#describe">04 &nbsp;Describing the idea</a></li>
-    <li><a href="#approve" class="gatemark">05 &nbsp;The approval gate</a></li>
+    <li><a href="#describe">05 &nbsp;Describing the idea</a></li>
+    <li><a href="#approve" class="gatemark">06 &nbsp;The approval gate</a></li>
     <li class="grp">Phase two</li>
-    <li><a href="#bench">06 &nbsp;Preparing the bench</a></li>
+    <li><a href="#bench">07 &nbsp;Preparing the bench</a></li>
     <li class="grp">Phase three</li>
-    <li><a href="#build">07 &nbsp;Building in slices</a></li>
-    <li><a href="#blocked" class="gatemark">08 &nbsp;When it stops you</a></li>
-    <li><a href="#away">09 &nbsp;Walking away</a></li>
-    <li><a href="#ship">10 &nbsp;Shipping it</a></li>
+    <li><a href="#build">08 &nbsp;Building in slices</a></li>
+    <li><a href="#blocked" class="gatemark">09 &nbsp;When it stops you</a></li>
+    <li><a href="#away">10 &nbsp;Walking away</a></li>
+    <li><a href="#ship">11 &nbsp;Shipping it</a></li>
     <li class="grp">Reference</li>
-    <li><a href="#files">11 &nbsp;Your project files</a></li>
-    <li><a href="#words">12 &nbsp;Plain-English words</a></li>
-    <li><a href="#card">13 &nbsp;Quick reference</a></li>
+    <li><a href="#files">12 &nbsp;Your project files</a></li>
+    <li><a href="#words">13 &nbsp;Plain-English words</a></li>
+    <li><a href="#card">14 &nbsp;Quick reference</a></li>
   </ol>
 </nav>
 
 <main>
+
+<div class="note go">
+  <h4>New in v1.0.0 &nbsp;/&nbsp; tuned for Claude 5</h4>
+  <p>
+    Forge has been rewritten for the current generation of Claude models. The instructions
+    behind it are about a quarter shorter, because these models need far less hand-holding
+    than the ones Forge was originally written for.
+  </p>
+  <p>
+    <strong>Nothing you do changes.</strong> Same three phases, same approval gate, same
+    files in your project. If you are on an older Claude 4 era model, there is a separate
+    edition for you: see <a href="#edition">which edition</a> below.
+  </p>
+</div>
 
 <!-- 01 -->
 <section id="what">
@@ -468,11 +483,68 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
 </section>
 
 <!-- 03 -->
-<section id="install">
+<section id="edition">
   <span class="secnum">03</span>
+  <h2>Which edition to install</h2>
+  <div class="prose">
+    <p>
+      Forge comes in two editions. They do the same job and produce the same project. The only
+      difference is which generation of Claude model the instructions inside are written for,
+      and that matters more than it sounds like it should.
+    </p>
+    <p>
+      Newer models follow instructions closely and check their own work without being told to.
+      Older ones needed to be reminded, repeatedly and in detail. Give a newer model the older
+      style and it over-checks everything and wastes effort. So there is one edition per
+      generation rather than one that tries to suit both.
+    </p>
+
+    <table>
+      <thead><tr><th style="width:26%">If you use</th><th style="width:24%">Install</th><th>Type this</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>A current Claude model</strong><br>Claude 5 era. This is almost certainly you.</td>
+          <td><code>forge-workflow</code><br>v1.0.0</td>
+          <td><code>/forge</code></td>
+        </tr>
+        <tr>
+          <td><strong>An older Claude model</strong><br>Claude 4 era</td>
+          <td><code>forge4-workflow</code><br>v0.1.0, frozen</td>
+          <td><code>/forge4</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      If you are not sure which you are on, install the first one. It is the maintained edition,
+      and it is what the rest of this guide describes.
+    </p>
+
+    <div class="note">
+      <h4>Install one at a time</h4>
+      <p>
+        Both editions run the same background scripts, so having both switched on at once makes
+        those scripts fire twice. Harmless but noisy. Install the one you need, and if you ever
+        want to try the other, switch the first one off first.
+      </p>
+      <p>
+        The older edition has its own copy of this guide at
+        <a href="https://daileng.github.io/forge4-workflow/">daileng.github.io/forge4-workflow</a>.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- 04 -->
+<section id="install">
+  <span class="secnum">04</span>
   <h2>Setting it up, once</h2>
   <div class="prose">
-    <p>Two commands. Claude Code fetches Forge from a public catalog and installs it for you.</p>
+    <p>
+      Two commands. Claude Code fetches Forge from a public catalog and installs it for you.
+      These install the Claude 5 edition, which is the one you want unless you read
+      <a href="#edition">section 03</a> and decided otherwise.
+    </p>
 <pre><span class="c"># point Claude Code at the catalog, then install the plugin</span>
 <span class="u">claude plugin marketplace add</span> DailenG/dailens-claude-toolbelt
 <span class="u">claude plugin install</span> forge-workflow@dailen</pre>
@@ -516,9 +588,9 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
   </div>
 </section>
 
-<!-- 04 -->
+<!-- 05 -->
 <section id="describe">
-  <span class="secnum">04</span>
+  <span class="secnum">05</span>
   <h2>Phase one: describing the idea</h2>
   <div class="prose">
     <p>
@@ -580,9 +652,9 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
   </div>
 </section>
 
-<!-- 05 -->
+<!-- 06 -->
 <section id="approve">
-  <span class="secnum">05</span>
+  <span class="secnum">06</span>
   <h2>The approval gate</h2>
   <div class="prose">
     <p>
@@ -625,9 +697,9 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
   </div>
 </section>
 
-<!-- 06 -->
+<!-- 07 -->
 <section id="bench">
-  <span class="secnum">06</span>
+  <span class="secnum">07</span>
   <h2>Phase two: preparing the bench</h2>
   <div class="prose">
     <p>
@@ -682,9 +754,9 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
   </div>
 </section>
 
-<!-- 07 -->
+<!-- 08 -->
 <section id="build">
-  <span class="secnum">07</span>
+  <span class="secnum">08</span>
   <h2>Phase three: building in slices</h2>
   <div class="prose">
     <p>
@@ -772,9 +844,9 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
   </div>
 </section>
 
-<!-- 08 -->
+<!-- 09 -->
 <section id="blocked">
-  <span class="secnum">08</span>
+  <span class="secnum">09</span>
   <h2>When it stops you</h2>
   <div class="prose">
     <p>
@@ -823,9 +895,9 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
   </div>
 </section>
 
-<!-- 09 -->
+<!-- 10 -->
 <section id="away">
-  <span class="secnum">09</span>
+  <span class="secnum">10</span>
   <h2>Walking away and coming back</h2>
   <div class="prose">
     <p>
@@ -886,9 +958,9 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
   </div>
 </section>
 
-<!-- 10 -->
+<!-- 11 -->
 <section id="ship">
-  <span class="secnum">10</span>
+  <span class="secnum">11</span>
   <h2>Shipping it</h2>
   <div class="prose">
     <p>
@@ -921,9 +993,9 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
   </div>
 </section>
 
-<!-- 11 -->
+<!-- 12 -->
 <section id="files">
-  <span class="secnum">11</span>
+  <span class="secnum">12</span>
   <h2>The files that appear in your project</h2>
   <div class="prose">
     <p>Forge creates these. You never have to edit them, but knowing what they are helps.</p>
@@ -943,9 +1015,9 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
   </div>
 </section>
 
-<!-- 12 -->
+<!-- 13 -->
 <section id="words">
-  <span class="secnum">12</span>
+  <span class="secnum">13</span>
   <h2>Plain-English words</h2>
   <div class="prose">
     <p>
@@ -977,9 +1049,9 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
   </div>
 </section>
 
-<!-- 13 -->
+<!-- 14 -->
 <section id="card">
-  <span class="secnum">13</span>
+  <span class="secnum">14</span>
   <h2>Quick reference</h2>
 
   <div class="steps two">

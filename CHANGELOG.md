@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The hosted guide gains a "Which edition to install" section (new section 03, later
+  sections renumbered) explaining the two editions and which Claude generation each
+  targets, plus a 1.0.0 update notice and a version stamp in the title block. Readers
+  landing on the install section are now told which edition those commands install.
+  Guide only, so no version bump.
+
 ## [1.0.0] - 2026-07-27
 
 Lean rewrite of every skill for Claude 5 era models.
