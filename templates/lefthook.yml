@@ -10,7 +10,33 @@
 
 pre-push:
   parallel: false
+  # piped stops the sequence at the first failure. Without it the build and
+  # test commands still run after the history check has already refused.
+  piped: true
   commands:
+    # Default-branch history integrity. Refuses a push that would delete the
+    # default branch or rewrite its history. Runs FIRST so a history-destroying
+    # push is stopped in milliseconds instead of after a full build and test
+    # run. The leading 00 is what puts it first: lefthook orders commands by
+    # priority, then by the leading number in the name, then alphabetically,
+    # never by their position in this file.
+    #
+    # use_stdin: true is load bearing. git writes one ref-update record per
+    # line to a pre-push hook's stdin, and without this lefthook does not
+    # forward them. The guard fails closed when it receives nothing, so a
+    # missing use_stdin blocks every push rather than silently disabling the
+    # check. Verify the wiring with:
+    #
+    #   node .forge/branch-protection.js verify
+    #
+    # When the git host enforces this server side (tier 1), this stays wired
+    # anyway: it costs nothing and it catches a bad push before it leaves the
+    # machine.
+    00_history:
+      use_stdin: true
+      run: node .forge/history-guard.js
+      fail_text: "Refused: this push would delete or rewrite default-branch history."
+
     01_secrets:
       run: gitleaks detect --no-banner --redact --exit-code 1
       fail_text: "Secret detected. Do not commit it, do not bypass this. Rotate anything exposed."

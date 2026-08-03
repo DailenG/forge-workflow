@@ -19,23 +19,33 @@ jobs:
       - name: Manifests parse, hooks references resolve, guide present
         run: node .github/scripts/manifest-check.js
 
-      - name: node --check every hook script
+      - name: node --check every hook script and shipped template
         run: |
           set -e
           shopt -s nullglob
           found=0
-          for f in scripts/*.js; do
+          for f in scripts/*.js templates/*.js; do
             found=1
             echo "checking $f"
             node --check "$f"
           done
           if [ "$found" -eq 0 ]; then
-            echo "no scripts found under scripts/"
+            echo "no scripts found under scripts/ or templates/"
             exit 1
           fi
 
       - name: Typography check (ASCII only)
         run: node .github/scripts/typography-check.js
+
+      # The protection tests push against disposable bare repositories in a
+      # temp directory, so git needs an identity and nothing leaves the runner.
+      - name: Configure git identity for the disposable-remote tests
+        run: |
+          git config --global user.email "ci@example.invalid"
+          git config --global user.name "Forge CI"
+
+      - name: Tests
+        run: node --test
 
       # The Claude Code CLI is installable in CI as an npm package, so plugin
       # validation runs as a real gate here. If that ever stops being true,

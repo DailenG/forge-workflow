@@ -85,7 +85,26 @@ Walk these in order. Stop at the first match. That is the current phase.
 | 9 | Backlog empty, a release gate fails | Release blocked | **STRICT.** Report exactly which gate and what is needed |
 | 10 | All requirements closed and released | Complete | Report status, ask what is next |
 
-The Phase 2 gate (row 4) is met only when all of these hold: toolchain smoke test passed in both directions, GitHub repo exists with an initial commit pushed, the pre-push hook is proven to block, CI has gone green at least once, CodeGraph is verified, and the state files are committed.
+The Phase 2 gate (row 4) is met only when all of these hold: toolchain smoke test passed in both directions, the remote repo exists with an initial commit pushed, the pre-push hook is proven to block, **default-branch history protection verified**, CI has gone green at least once, CodeGraph is verified, and the state files are committed.
+
+**Default-branch history protection verified** is satisfied by either of two things, and `node .forge/branch-protection.js gate` decides which:
+
+- verified server-side enforcement, or
+- verified managed local enforcement, with its narrower trust boundary recorded
+
+A host that reserves branch protection for paid plans is not a fatal bootstrap failure. Forge takes the local fallback, records what it does not cover, and moves on. Never resolve this by making a private repository public.
+
+### Resuming a project blocked on a paid ruleset
+
+Older forge runs treated a GitHub ruleset on `main` as mandatory, so a project on a free personal plan with a private repository could stall at Phase 2 with a blocker it could not clear. When the record shows that, run:
+
+```powershell
+node .forge/branch-protection.js migrate
+```
+
+It re-detects provider capability, installs and verifies the fallback if server-side enforcement is still unavailable, and hands back exactly which recorded blocker to clear. Then, with the Edit tool: clear only that blocker from `CONTINUE.md`, leave every other blocker alone, append the decision to `docs/DECISIONS.md`, refresh the protection section of `docs/ENVIRONMENT.md`, and resume Phase 2 at the first remaining unmet gate item.
+
+If `.forge/branch-protection.js` is not in the project (it predates this), copy it and `history-guard.js` from the plugin's `templates/` first.
 
 ## Step 4: Report, then act according to mode
 
@@ -118,7 +137,7 @@ Once a release is in reach, stay strict through the release and resume FLOW afte
 These are the gates the whole design exists to protect. Never pass one autonomously:
 
 - SRS approval, at the Phase 1 to 2 boundary
-- Whether the GitHub repository is public or private
+- Whether the remote repository is public or private. Changing it later is the same gate, and a hosting feature that is only available on public repositories is never a reason to change it
 - Any command requiring elevation
 - Discarding, stashing, or destroying uncommitted work
 - Deleting a branch that has unmerged commits

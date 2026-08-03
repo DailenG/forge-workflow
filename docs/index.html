@@ -751,6 +751,33 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
         force its way past it.
       </p>
     </div>
+
+    <div class="note">
+      <h4>Protecting the main line of work</h4>
+      <p>
+        The main copy of your project must not be deletable, and must not accept a save that throws
+        away history. Forge sets that up in whichever of two ways your hosting account actually
+        allows.
+      </p>
+      <p>
+        <strong>Best case, the host enforces it.</strong> The rule lives on the server, so it applies
+        to everything and everyone, including changes made through the website.
+      </p>
+      <p>
+        <strong>Otherwise, your machine enforces it.</strong> Some hosting plans reserve that server
+        setting for paid accounts. GitHub free personal accounts, for example, answer "Upgrade to
+        GitHub Pro or make this repository public to enable this feature" on a private project.
+        Forge does not buy anything and <strong>never</strong> makes a private project public to get
+        around it. It installs a local guard instead, which refuses a history-destroying save from
+        this computer, and tells you once what that does not cover: a copy of the project on another
+        machine that was never set up, a change made through the website, a guard someone deleted,
+        or somebody who has your password. Then it carries on.
+      </p>
+      <p>
+        Either way, Forge proves the guard works before trusting it, using throwaway practice copies
+        of a project rather than your real one, and writes down which of the two is in force.
+      </p>
+    </div>
   </div>
 </section>
 
