@@ -60,9 +60,11 @@ Compare the record against reality:
 
 - Does the current branch match the claimed in-progress slice?
 - Does the working tree state match what `CONTINUE.md` describes?
-- Does the last commit match what is recorded?
+- Does the work `CONTINUE.md` describes as finished actually appear in `git log`?
 - Does the test suite result match? A red suite the record does not mention changes everything
 - Does `TODO.md` In Progress agree with the branch and the commits?
+
+Commit identity comes from git, never from the record. Older projects carry a `Last commit:` line in `CONTINUE.md`; it is stale by construction, since committing the file changes the commit the field names. Ignore it, reconcile against the SessionStart git summary and `git log`, and drop the line the next time you update the file. Its staleness is not a discrepancy.
 
 **If the record and reality disagree, stop.** Report the discrepancy and ask how to reconcile. Do not trust either side, and do not build on an unexplained inconsistency. This override applies in FLOW mode too.
 
@@ -76,7 +78,7 @@ Walk these in order. Stop at the first match. That is the current phase.
 |---|---|---|---|
 | 1 | No `docs/SRS.md` | Not started | Run `forge-spec` |
 | 2 | `docs/SRS.md` exists, `Gate: AWAITING_APPROVAL` | Spec written | **Stop.** Summarize the SRS and ask for review. Never self-approve |
-| 3 | SRS approved, no `docs/ENVIRONMENT.md` | Spec done | Run `forge-env` |
+| 3 | SRS approved (`Phase: 2`), no `docs/ENVIRONMENT.md` | Spec done | Run `forge-env` |
 | 4 | `docs/ENVIRONMENT.md` exists but the Phase 2 gate is unmet | Bootstrap partial | Resume `forge-env` at the first failed item |
 | 5 | Bootstrap complete, no build plan in `TODO.md` | Ready to build | Run `forge-code`, starting with the build plan |
 | 6 | `TODO.md` has a task In Progress | Mid-slice | Resume that slice. See "Resuming a slice" below |
@@ -148,6 +150,16 @@ These are the gates the whole design exists to protect. Never pass one autonomou
 - Anything the pre-push hook blocked. Report it, never bypass it
 - Adding a dependency that was not named in the SRS
 - Any discrepancy between recorded state and reality
+
+## Approval is one transition (row 2 to row 3)
+
+When the user explicitly approves the SRS, the approval and the phase change are the same act. Do not write a `Phase: 1`, `Gate: PASSED` state on the way through: nothing reads it, and a session interrupted afterwards would read Phase 1 while Phase 2 work was already underway.
+
+1. Set `CONTINUE.md` to `Phase: 2` and `Gate: IN_PROGRESS`, preserving `Mode:` when it is already valid
+2. Set `Current task:` to the Phase 2 environment inventory, and `Next action` to `forge-env` Step 1
+3. Remove the SRS approval item from `Blocked on me`, leaving the other blockers alone
+4. Commit it in one conventional commit, so `Working tree:` reads clean afterwards
+5. Invoke `forge-env` and begin with its inventory
 
 ## Resuming a slice (row 6)
 

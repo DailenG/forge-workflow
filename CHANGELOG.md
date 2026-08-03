@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-08-03
+
+The Phase 1 to 2 boundary, and the removal of one recorded field that could
+never be true. Both are the defect family 1.1.1 addressed at the Phase 2 to 3
+boundary: a record describing a state that either does not exist or cannot
+exist.
+
+### Fixed
+
+- SRS approval is one transition. `forge-spec` no longer instructs a Phase 1
+  `Gate: PASSED` state, and `forge` moves the record straight to `Phase: 2` with
+  `Gate: IN_PROGRESS` in a single commit, clearing only the approval item from
+  `Blocked on me` before invoking `forge-env`. Nothing read the intermediate
+  state, and a session interrupted after it would have read Phase 1 while
+  Phase 2 work was already underway. The approval gate itself is unchanged and
+  still never self-approved.
+- Detection ladder row 3 now keys the approved spec on `Phase: 2`, the record
+  the transition actually writes.
+- Removed the `Last commit:` field from `templates/CONTINUE.md`. Writing a SHA
+  into a file and then committing that file changes the commit the field names,
+  so the value was stale by exactly one commit every time it was recorded.
+  Step 2 reconciled against it, manufacturing a discrepancy from a record that
+  was working as designed. Reconciliation now reads the SessionStart git summary
+  and `git log`. Legacy projects that carry the line are told to ignore and drop
+  it, and its staleness is explicitly not a discrepancy.
+
+### Added
+
+- `tests/lifecycle-approval.test.js`, covering the approval transition contract
+  and proving that injected commit identity comes from git rather than the
+  record.
+
 ## [1.1.1] - 2026-08-03
 
 Phase 2 completion is now one atomic state transition, so the handoff to Phase 3

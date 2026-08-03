@@ -13,7 +13,6 @@ Last updated: <ISO timestamp>
 Current task: <TODO.md task ID and one line, or "none, awaiting next task">
 Branch: <branch name, or main>
 Working tree: <clean | exactly what is uncommitted and why>
-Last commit: <short SHA and subject>
 Last release: <tag, or "none yet">
 Test suite: <passing | failing, with which tests and whether that is expected>
 

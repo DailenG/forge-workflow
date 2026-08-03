@@ -149,7 +149,7 @@ Gate:  AWAITING_APPROVAL
 Mode:  FLOW
 ```
 
-This file drives the `/forge` detection ladder for the rest of the project's life; without it a later session cannot tell that the spec exists but is unapproved, and will route into the wrong phase. Set `Gate: PASSED` only after the user explicitly approves the SRS.
+This file drives the `/forge` detection ladder for the rest of the project's life; without it a later session cannot tell that the spec exists but is unapproved, and will route into the wrong phase. Do not set a Phase 1 `Gate: PASSED` state, now or later: nothing reads it, and it describes a project that is neither awaiting approval nor bootstrapping. Explicit approval moves the record straight to `Phase: 2` with `Gate: IN_PROGRESS`.
 
 ## Protect the work before stopping
 
@@ -165,7 +165,7 @@ No remote yet. Phase 2 asks about public versus private and creates the GitHub r
 
 After writing the SRS, stop. Summarize what you wrote, list anything you are still uneasy about, and ask for review.
 
-**SRS approval is an always-strict gate and you never self-approve it.** Wait for the user to explicitly approve, then tell them to run `/forge`, which will detect the approved spec and move to bootstrap.
+**SRS approval is an always-strict gate and you never self-approve it.** Wait for the user to explicitly approve, then tell them to run `/forge`, which performs the approval transition in one commit and moves to bootstrap.
 
 ## Living document rule
 
