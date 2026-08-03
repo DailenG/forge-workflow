@@ -77,7 +77,7 @@ On Linux and macOS, make the hook scripts executable: `chmod +x ~/.claude/skills
 ## The three phases and their gates
 
 1. **Spec.** Requirements discovery. Claude asks questions in small batches and scores its understanding across ten areas, reporting the lowest score rather than the average. It keeps going until the lowest reaches 95. The phase ends with a written `docs/SRS.md` and a full stop: **Claude will not approve its own spec.** You read it and approve. This gate is always strict.
-2. **Env.** Toolchain and repository bootstrap. It inventories the machine, installs only what is genuinely missing, sets up the repo, testing harness, git hooks, and CI, and proves the test runner actually reports failures rather than silently passing.
+2. **Env.** Toolchain and repository bootstrap. It inventories the machine, installs only what is genuinely missing, sets up the repo, testing harness, git hooks, and CI, and proves the test runner actually reports failures rather than silently passing. Default-branch protection is capability based: server-side enforcement where the host and account provide it, a proven local `pre-push` history guard where they do not. That is why a free-tier account with a private repository is not blocked here, and **a private repository is never made public to satisfy a gate.**
 3. **Code.** Test-driven implementation, one short-lived branch per vertical slice. Tests are written first and watched to fail before they pass. A pre-push hook runs build, tests, lint, and a secret scan, and it is the only automated gate before `main`, so `--no-verify` is prohibited. When the milestone backlog empties and the release gates pass, Forge switches to a strict mode and proposes a tagged release.
 
 Default mode is **FLOW** (proceed between slices without asking, report after each). **STRICT** engages automatically as a release comes into reach, and some gates are always strict regardless of mode: SRS approval, repository visibility, anything needing elevation, discarding uncommitted work, tagging or publishing, adding a dependency not named in the SRS, and any discrepancy between the record and the repository.
@@ -90,7 +90,10 @@ Default mode is **FLOW** (proceed between slices without asking, report after ea
 | `TODO.md` | Work needed, in progress, completed |
 | `docs/SRS.md` | The specification. Living, amended by change log only |
 | `docs/DECISIONS.md` | Dated decision record |
-| `docs/ENVIRONMENT.md` | Machine profile, tool versions, manual steps performed |
+| `docs/ENVIRONMENT.md` | Machine profile, tool versions, manual steps performed, and which default-branch protection tier is in force |
+| `.forge/branch-protection.js` | Provider-neutral protection tool: detect, apply, verify, gate, migrate |
+| `.forge/history-guard.js` | Managed `pre-push` guard refusing default-branch deletion and non-fast-forward pushes |
+| `.forge/protection.json` | Recorded provider, tier, mechanism, trust boundary, and verification evidence |
 | `docs/traceability.md` | Requirement to test mapping. v1.0.0 cannot be tagged until it is complete |
 | `docs/docs-manifest.yml` | Doc page to symbol map, drives the CI drift gate |
 | `docs/images/MANIFEST.md` | Screenshot inventory and capture state |

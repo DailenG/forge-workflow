@@ -4,7 +4,15 @@ Thanks for helping improve Forge. This is a Claude Code plugin (skills plus hook
 
 ## Test a change locally before opening a pull request
 
-1. **Validate the manifests.** From the repository root:
+1. **Run the test suite.** The shipped scripts under `templates/` have real tests. No dependencies, no install step:
+
+   ```
+   node --test
+   ```
+
+   The disposable-remote tests create bare repositories under the system temp directory and push to them. They never touch a real remote, and every cleanup goes through a check that refuses any path that is not a directory the tool itself created with its own prefix. Git needs `user.name` and `user.email` set for them to pass.
+
+2. **Validate the manifests.** From the repository root:
 
    ```
    claude plugin validate --strict .
@@ -12,7 +20,7 @@ Thanks for helping improve Forge. This is a Claude Code plugin (skills plus hook
 
    This checks `marketplace.json` and `plugin.json`, the skill frontmatter, and `hooks/hooks.json`. It must pass with no errors before you open a pull request.
 
-2. **Load your working copy.** Point Claude Code at your checkout rather than the published marketplace so you test the exact files you edited. This repository's `marketplace.json` is named `dailen-dev` (the published catalog is the separate `dailen` marketplace), so install from `@dailen-dev`:
+3. **Load your working copy.** Point Claude Code at your checkout rather than the published marketplace so you test the exact files you edited. This repository's `marketplace.json` is named `dailen-dev` (the published catalog is the separate `dailen` marketplace), so install from `@dailen-dev`:
 
    ```
    claude plugin marketplace add ./
@@ -21,7 +29,7 @@ Thanks for helping improve Forge. This is a Claude Code plugin (skills plus hook
 
    On Linux and macOS, make the hook scripts executable first: `chmod +x scripts/*.js`.
 
-3. **Reload after hook or script changes.** Edits to `skills/**/SKILL.md` apply on the next turn, but anything under `hooks/` or `scripts/` needs a reload before it takes effect:
+4. **Reload after hook or script changes.** Edits to `skills/**/SKILL.md` apply on the next turn, but anything under `hooks/` or `scripts/` needs a reload before it takes effect:
 
    ```
    /reload-plugins
@@ -29,7 +37,7 @@ Thanks for helping improve Forge. This is a Claude Code plugin (skills plus hook
 
    A full restart of Claude Code works too. If you only edited a `SKILL.md`, no reload is needed.
 
-4. **Exercise the path you changed.** Run `/forge` (or the specific phase command) in a scratch project and confirm the behavior. For hook changes, confirm the SessionStart and Stop hooks still fire by watching for the injected `CONTINUE.md` state block.
+5. **Exercise the path you changed.** Run `/forge` (or the specific phase command) in a scratch project and confirm the behavior. For hook changes, confirm the SessionStart and Stop hooks still fire by watching for the injected `CONTINUE.md` state block.
 
 ## Bump the version on any behavior change
 

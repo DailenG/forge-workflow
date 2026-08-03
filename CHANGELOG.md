@@ -7,13 +7,76 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-02
+
+Capability-based default-branch protection, so a free-tier account with a
+private repository is no longer blocked at bootstrap.
+
+Phase 2 previously required a GitHub ruleset on `main`. GitHub reserves that
+for paid plans on private personal repositories and answers `Upgrade to GitHub
+Pro or make this repository public to enable this feature`, which left a solo
+developer on a free plan with a bootstrap gate they could only pass by paying
+or by publishing a private repository. Neither is an acceptable price for a
+lifecycle gate.
+
+### Added
+
+- `templates/branch-protection.js`: a provider-neutral protection tool.
+  `detect`, `apply`, `verify`, `selftest`, `gate`, `migrate`, `report`, and
+  `status` subcommands, with adapters for GitHub (rulesets, falling back to
+  classic branch protection on older Enterprise Server), GitLab (protected
+  branches), and an explicit fallback for self-hosted or unrecognised hosts. It
+  takes the strongest tier the host and account actually support and records
+  the provider, mechanism, and verification evidence in
+  `.forge/protection.json`.
+- `templates/history-guard.js`: a managed `pre-push` history-integrity guard.
+  It reads the ref-update records git writes to a pre-push hook's stdin and
+  refuses deletion of the protected branch and non-fast-forward updates to it,
+  while allowing fast-forward pushes and initial branch creation. It fails
+  closed, with a message naming the fix, when it cannot see the ref records.
+- `branch-protection.js selftest`, which proves the guard end to end against
+  disposable repositories in a temp directory. Every recursive delete goes
+  through a check that refuses anything that is not a directory the tool itself
+  created under the system temp directory with its own prefix.
+- A test suite under `tests/`, run with `node --test tests/` and wired into CI.
+
 ### Changed
 
+- Phase 2's protection step is now capability based. The gate item is
+  "default-branch history protection verified", satisfied by either verified
+  server-side enforcement or verified managed local enforcement with its
+  narrower trust boundary recorded. An unavailable paid hosting feature is no
+  longer a fatal bootstrap failure.
+- `templates/lefthook.yml` runs the history check first, with `use_stdin: true`
+  so lefthook forwards git's ref records to it, and `piped: true` so the secret
+  scan, lint, build, and test commands do not run after it has already refused
+  the push. The command is named `00_history` because lefthook orders commands
+  by priority, then by the leading number in the name, then alphabetically,
+  never by their position in the file.
+- `verify` inspects rather than installs. An earlier form called the installer,
+  which meant a hook the user had deleted was silently recreated and then
+  reported as verified. It now also confirms the hook is somewhere git will
+  actually run it, honouring `core.hooksPath`, and that `lefthook install` has
+  been run rather than trusting `lefthook.yml` alone.
+- The recorded `protections` list reflects what was verified rather than being
+  written unconditionally, so the gate's coverage check is live.
+- `forge-standards` states the protection policy once, behaviourally and
+  without naming a host, alongside its trust boundary.
+- The always-strict repository visibility gate now covers later changes to
+  visibility as well as the initial choice. A hosting feature that is only
+  available on public repositories is never a reason to change it, and the
+  tool refuses to issue a visibility mutation at all.
 - The hosted guide gains a "Which edition to install" section (new section 03, later
   sections renumbered) explaining the two editions and which Claude generation each
-  targets, plus a 1.0.0 update notice and a version stamp in the title block. Readers
-  landing on the install section are now told which edition those commands install.
-  Guide only, so no version bump.
+  targets, plus a version stamp in the title block. Readers landing on the install
+  section are now told which edition those commands install.
+
+### Migration
+
+A project whose environment phase stalled on a paid-plan ruleset resumes with
+`node .forge/branch-protection.js migrate`, which re-detects provider
+capability, installs and verifies the fallback, and names exactly which
+recorded blocker to clear. Unrelated blockers are preserved.
 
 ## [1.0.0] - 2026-07-27
 
@@ -82,6 +145,7 @@ Initial public release.
 - Illustrated user guide hosted on GitHub Pages.
 - Marketplace distribution via the `dailen` marketplace, plus a manual skills-directory install path.
 
-[Unreleased]: https://github.com/DailenG/forge-workflow/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/DailenG/forge-workflow/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/DailenG/forge-workflow/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/DailenG/forge-workflow/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/DailenG/forge-workflow/releases/tag/v0.1.0

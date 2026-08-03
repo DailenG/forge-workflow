@@ -88,7 +88,7 @@ Only after the toolchain smoke test passes:
 
 - Create the project directory if needed and run `git init`
 - Configure `user.name` and `user.email` if unset. Ask for the values
-- Write `.gitignore` **before the first commit**, covering the stack, IDE files, OS files, build output, `.env`, coverage output, and `.codegraph/`. A secret committed once lives in history forever, so this ordering is not negotiable
+- Write `.gitignore` **before the first commit**, covering the stack, IDE files, OS files, build output, `.env`, coverage output, and `.codegraph/`. A secret committed once lives in history forever, so this ordering is not negotiable. Do not ignore `.forge/`: the protection guard has to be committed, or a fresh clone has no guard
 - Write `.gitattributes` with sane line ending handling
 - Create the directory skeleton the SRS implies, including the test directory layout
 - Do not scaffold application code; that is Phase 3
@@ -106,11 +106,56 @@ Only after the toolchain smoke test passes:
 Set up the guards that make the branch-per-slice workflow safe, then explain it (see "Explain the workflow" below).
 
 - Install lefthook, or the stack's equivalent hook manager
+- Copy `templates/lefthook.yml` and fill in the stack's real commands
 - Configure a **pre-push** hook that runs build, tests, lint, and a secret scan, refusing the push if any fail. This is the only automated gate before code reaches main, since there is no pull request review
 - Add gitleaks or equivalent to the pre-push hook
 - **Prove the hook blocks.** Make a deliberate failure, attempt a push, and confirm it is refused. A hook that silently does not run is worse than no hook
-- Configure a GitHub ruleset on `main` blocking force pushes and deletions
 - Record in `docs/DECISIONS.md` that `--no-verify` is prohibited
+
+## Step 9a: Default-branch history protection
+
+The policy, stated without reference to any host: **the default branch must not be deletable and must not accept a non-fast-forward update.** Ordinary fast-forward pushes and this workflow's `--no-ff` merges must keep working.
+
+Two mechanisms satisfy that. Take the strongest one this repository and account actually support, and record which.
+
+**Tier 1, server side.** The git host enforces it for every writer. Preferred whenever available.
+
+**Tier 2, managed local.** A pre-push guard enforces the same two rules in every clone configured with it. Used when the host has no such feature, the plan withholds it, or the token lacks the permission.
+
+Tier 2 exists because server-side protection of a private repository is a paid feature on some hosts. GitHub personal free accounts answer `Upgrade to GitHub Pro or make this repository public to enable this feature`. **A paid plan is not a baseline requirement for forge, and a repository is never made public to satisfy a gate.** Repository visibility is only ever what the user chose in Step 8.
+
+Copy `templates/branch-protection.js` and `templates/history-guard.js` into `.forge/` in the project, commit them, then:
+
+```powershell
+node .forge/branch-protection.js detect
+node .forge/branch-protection.js apply
+```
+
+`apply` probes the provider (GitHub, GitLab, self-hosted, or unrecognised), takes tier 1 if the host grants it, otherwise installs and proves tier 2, and writes `.forge/protection.json` with the provider, the mechanism, and the verification evidence. It never issues a visibility change.
+
+With lefthook, three things have to be true, and `templates/lefthook.yml` already does all three:
+
+- The guard declares `use_stdin: true`. That is what forwards git's ref-update records to it; without them the guard fails closed and blocks every push.
+- The guard sorts first. lefthook orders commands by `priority`, then by the leading number in the command name, then alphabetically, **never** by their position in the file, which is why it is named `00_history`.
+- The hook sets `piped: true`, so the build and test commands do not run after the history check has already refused.
+
+`lefthook install` must also have been run, or nothing in `lefthook.yml` executes at all. Confirm all of it with:
+
+```powershell
+node .forge/branch-protection.js verify
+```
+
+Verification uses disposable repositories in a temp directory and proves a fast-forward push is accepted, a protected-branch deletion is refused, a non-fast-forward push is refused, and the quality checks still run. **Never test a destructive push against the project's real remote.**
+
+### Say the limitation once
+
+When tier 2 is selected, tell the user plainly, once, using the reason `apply` actually reported rather than assuming it was the plan:
+
+> This account's plan does not allow server-side branch protection on a private repository. I have installed a local pre-push guard instead, which blocks deleting or rewriting `main` from this clone. It does not stop a push from an unconfigured clone, a change made through the web UI or API, a deleted hook, or someone with your credentials. Making the repository public would enable the server-side version; I have not done that and will not without you asking.
+
+In FLOW mode, proceed. Ask for a decision only when the SRS actually requires server-side enforcement, or when more than one writer has push access. Do not raise it again, and do not repeat the upgrade suggestion.
+
+Record in `docs/DECISIONS.md`: the provider, which tier is in force, the mechanism, why tier 1 was unavailable if it was, that visibility was unchanged, and the trust boundary.
 
 ## Step 10: Code intelligence layer
 
@@ -198,6 +243,7 @@ Before finishing, explain the lifecycle to the user in plain language, once. The
 
 - Why each slice gets its own branch, and that a bad slice gets deleted rather than reverted
 - What the pre-push hook will do, that it will sometimes block them, and that `--no-verify` is off limits
+- What protects `main` from being deleted or rewritten, which tier is in force here, and what that tier does not cover
 - What conventional commit prefixes are for, and that the changelog is generated from them
 - What `--no-ff` merges buy: one identifiable unit on main per slice
 - What tags and releases mean here, and that tags never move
@@ -216,6 +262,7 @@ Write `docs/ENVIRONMENT.md`:
 - Every manual step the user performed, so it can be reproduced
 - Toolchain smoke test commands and output, **including the deliberate-failure verification**
 - Pre-push hook verification evidence
+- The default-branch protection section, from `node .forge/branch-protection.js report`. It carries the provider, the tier, the mechanism, the trust boundary, and the case-by-case evidence
 - CodeGraph verbatim command list and MCP tool list
 - Known gaps, workarounds, anything needing revisiting
 
@@ -223,6 +270,8 @@ Append version choices to `docs/DECISIONS.md`.
 
 ## Gate
 
-Stop once the toolchain smoke test passes in both directions, the GitHub repo exists with an initial commit pushed, the pre-push hook is proven to block, CI is green, CodeGraph is verified, and the state files are committed.
+Stop once the toolchain smoke test passes in both directions, the remote repo exists with an initial commit pushed, the pre-push hook is proven to block, **default-branch history protection is verified at either tier** (`node .forge/branch-protection.js gate` exits 0), CI is green, CodeGraph is verified, and the state files are committed.
+
+A host that withholds server-side protection behind a paid plan is not a failed gate. Verified local enforcement with its trust boundary recorded satisfies it.
 
 Print the summary table. Do not begin implementation. Tell the user to run `/forge` when ready; it will detect that bootstrap is complete and move to the build phase.

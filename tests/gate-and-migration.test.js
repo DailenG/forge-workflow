@@ -1,0 +1,358 @@
+"use strict";
+
+/*
+ * The bootstrap gate, the records it reads, and the migration for a project
+ * that stalled on a paid-plan ruleset.
+ *
+ * The gate question is "is default-branch history protection verified", and it
+ * has two acceptable answers. What it must never do is accept an unverified
+ * claim, or accept local enforcement without its narrower trust boundary
+ * written down.
+ */
+
+const test = require("node:test");
+const assert = require("node:assert");
+const fs = require("fs");
+const path = require("path");
+const { spawnSync } = require("child_process");
+
+const bp = require("../templates/branch-protection.js");
+const {
+  makeSandbox,
+  cleanup,
+  recordingRunner,
+  gitContextHandlers,
+  json,
+  TOOL_SRC,
+} = require("./helpers/sandbox.js");
+
+const PLAN_REFUSAL =
+  "gh: Upgrade to GitHub Pro or make this repository public to enable this feature. (HTTP 403)";
+
+function planRefusalHandlers() {
+  return [
+    { match: (bin, args) => bin === "gh" && args[0] === "--version", reply: { status: 0, stdout: "gh 2\n" } },
+    {
+      match: (bin, args) => bin === "gh" && args.join(" ") === "api repos/acme/widget",
+      reply: () =>
+        json({
+          private: true,
+          default_branch: "main",
+          owner: { type: "User" },
+          permissions: { admin: true },
+        }),
+    },
+    { match: (bin, args) => bin === "gh" && args.join(" ") === "api user", reply: () => json({ plan: { name: "free" } }) },
+    {
+      match: (bin, args) =>
+        bin === "gh" && /repos\/acme\/widget\/rulesets\?includes_parents=false$/.test(args.join(" ")),
+      reply: () => json([]),
+    },
+    {
+      match: (bin, args) => bin === "gh" && args.indexOf("--method") !== -1,
+      reply: { status: 1, stdout: "", stderr: PLAN_REFUSAL },
+    },
+  ];
+}
+
+function planRefusalTool(root) {
+  const run = recordingRunner(gitContextHandlers().concat(planRefusalHandlers()));
+  return bp.createTool({ cwd: root, run: run, now: () => "2026-08-02T00:00:00.000Z" });
+}
+
+function state(overrides) {
+  return Object.assign(
+    {
+      schema: 1,
+      provider: "github",
+      defaultBranch: "main",
+      protections: ["deletion", "non-fast-forward"],
+      tier: "remote",
+      mechanism: "github-ruleset",
+      verified: true,
+      trustBoundary: bp.TRUST_BOUNDARY_REMOTE,
+      evidence: [],
+    },
+    overrides || {}
+  );
+}
+
+/* ---------------- requirement 12: either tier satisfies the gate ---------- */
+
+test("requirement 12: verified server-side enforcement satisfies the gate", () => {
+  const tool = bp.createTool({ cwd: process.cwd() });
+  const gate = tool.gateStatus(state());
+  assert.equal(gate.satisfied, true);
+  assert.equal(gate.tier, "remote");
+  assert.match(gate.reason, /server-side enforcement verified/);
+});
+
+test("requirement 12: verified local enforcement with a recorded trust boundary also satisfies it", () => {
+  const tool = bp.createTool({ cwd: process.cwd() });
+  const gate = tool.gateStatus(
+    state({
+      tier: "local",
+      mechanism: "managed-pre-push-guard",
+      trustBoundary: bp.TRUST_BOUNDARY_LOCAL,
+      fallbackReason: "plan: the host withheld the feature",
+    })
+  );
+  assert.equal(gate.satisfied, true);
+  assert.equal(gate.tier, "local");
+  assert.match(gate.reason, /trust boundary recorded/);
+});
+
+test("an unavailable paid feature is not by itself a failed gate", () => {
+  // The whole point: a free-plan refusal must not read as a fatal bootstrap
+  // failure when the local fallback is valid and verified.
+  const tool = bp.createTool({ cwd: process.cwd() });
+  const gate = tool.gateStatus(
+    state({
+      tier: "local",
+      mechanism: "managed-pre-push-guard",
+      trustBoundary: bp.TRUST_BOUNDARY_LOCAL,
+      fallbackReason: "plan: Upgrade to GitHub Pro",
+    })
+  );
+  assert.equal(gate.satisfied, true);
+});
+
+test("local enforcement without its trust boundary recorded does NOT satisfy the gate", () => {
+  const tool = bp.createTool({ cwd: process.cwd() });
+  const gate = tool.gateStatus(state({ tier: "local", trustBoundary: "" }));
+  assert.equal(gate.satisfied, false);
+  assert.match(gate.reason, /trust boundary/);
+});
+
+test("an unverified claim never satisfies the gate, at either tier", () => {
+  const tool = bp.createTool({ cwd: process.cwd() });
+  assert.equal(tool.gateStatus(state({ verified: false })).satisfied, false);
+  assert.equal(
+    tool.gateStatus(state({ tier: "local", trustBoundary: bp.TRUST_BOUNDARY_LOCAL, verified: false })).satisfied,
+    false
+  );
+});
+
+test("protection that misses one of the two required behaviours fails the gate", () => {
+  const tool = bp.createTool({ cwd: process.cwd() });
+  const gate = tool.gateStatus(state({ protections: ["deletion"] }));
+  assert.equal(gate.satisfied, false);
+  assert.match(gate.reason, /non-fast-forward/);
+});
+
+test("no recorded protection at all fails the gate", () => {
+  const tool = bp.createTool({ cwd: process.cwd() });
+  const gate = tool.gateStatus(null);
+  assert.equal(gate.satisfied, false);
+  assert.match(gate.reason, /no protection state recorded/);
+});
+
+/* ---------------- requirement 13: state file and environment report ------- */
+
+test("requirement 13: apply writes a state file that records the tier and the evidence", () => {
+  const root = makeSandbox();
+  try {
+    const recorded = planRefusalTool(root).apply();
+    const onDisk = JSON.parse(fs.readFileSync(path.join(root, ".forge", "protection.json"), "utf8"));
+
+    assert.deepEqual(onDisk, recorded, "the returned state is the state that was written");
+    assert.equal(onDisk.schema, 1);
+    assert.equal(onDisk.provider, "github");
+    assert.equal(onDisk.repository, "acme/widget");
+    assert.equal(onDisk.defaultBranch, "main");
+    assert.equal(onDisk.visibility, "private");
+    assert.equal(onDisk.visibilityChanged, false);
+    assert.equal(onDisk.tier, "local");
+    assert.equal(onDisk.mechanism, "managed-pre-push-guard");
+    assert.deepEqual(onDisk.protections, ["deletion", "non-fast-forward"]);
+    assert.equal(onDisk.verified, true);
+    assert.equal(onDisk.trustBoundary, bp.TRUST_BOUNDARY_LOCAL);
+    assert.match(onDisk.fallbackReason, /^plan: /);
+
+    // The rejected tier-1 attempt is kept, so the record says what was tried.
+    assert.equal(onDisk.attempts[0].tier, "remote");
+    assert.equal(onDisk.attempts[0].applied, false);
+    assert.equal(onDisk.attempts[0].failure.kind, "plan");
+
+    assert.ok(onDisk.evidence.length >= 8, "the local tier records its proof");
+    assert.ok(onDisk.evidence.every((e) => e.pass));
+  } finally {
+    cleanup(root);
+  }
+});
+
+test("requirement 13: the environment report states the tier, the boundary, and the evidence", () => {
+  const root = makeSandbox();
+  try {
+    const tool = planRefusalTool(root);
+    const recorded = tool.apply();
+    const markdown = tool.report(recorded);
+
+    assert.match(markdown, /## Default-branch protection/);
+    assert.match(markdown, /\| Tier \| 2, managed local \|/);
+    assert.match(markdown, /\| Mechanism \| managed-pre-push-guard \|/);
+    assert.match(markdown, /\| Visibility \| private, unchanged by forge \|/);
+    assert.match(markdown, /\| Protects against \| deletion, non-fast-forward \|/);
+    assert.match(markdown, /\| Gate \| satisfied/);
+    assert.match(markdown, /Server-side enforcement was not used: plan:/);
+    assert.match(markdown, /Trust boundary: Local enforcement only/);
+    assert.match(markdown, /### Verification evidence/);
+    assert.match(markdown, /\| protected branch deletion \|/);
+    assert.doesNotMatch(markdown, /FAIL/);
+  } finally {
+    cleanup(root);
+  }
+});
+
+test("requirement 13: a tier 1 report names server-side enforcement instead", () => {
+  const root = makeSandbox();
+  try {
+    const tool = bp.createTool({ cwd: root });
+    const markdown = tool.report(state({ visibility: "public", evidence: [] }));
+    assert.match(markdown, /\| Tier \| 1, server side \|/);
+    assert.match(markdown, /Trust boundary: Server-side enforcement/);
+  } finally {
+    cleanup(root);
+  }
+});
+
+/* ---------------- requirement 14: migrating a blocked project ------------- */
+
+const BLOCKED_CONTINUE = [
+  "# Continue Here",
+  "",
+  "Phase: 2",
+  "Gate:  IN_PROGRESS",
+  "Mode:  FLOW",
+  "",
+  "## Blocked on me",
+  "",
+  "- GitHub refused the ruleset on main: private repository rulesets require a paid plan (Upgrade to GitHub Pro).",
+  "- Need the staging database credentials before slice 4 can be built.",
+  "- Waiting on a decision about whether to support Windows 10.",
+  "",
+  "## Notes for the next session",
+  "",
+  "- The ruleset attempt is recorded in docs/DECISIONS.md.",
+].join("\n");
+
+test("requirement 14: only the ruleset blocker is classified for clearing", () => {
+  const tool = bp.createTool({ cwd: process.cwd() });
+  const blockers = tool.classifyBlockers(BLOCKED_CONTINUE);
+  assert.equal(blockers.clear.length, 1);
+  assert.match(blockers.clear[0], /ruleset/);
+  assert.equal(blockers.preserve.length, 2);
+  assert.match(blockers.preserve[0], /staging database credentials/);
+  assert.match(blockers.preserve[1], /Windows 10/);
+});
+
+test("a blocker that merely mentions a plan is preserved, not cleared", () => {
+  const tool = bp.createTool({ cwd: process.cwd() });
+  const blockers = tool.classifyBlockers(
+    ["## Blocked on me", "", "- The client has to upgrade their plan before SSO can be enabled."].join("\n")
+  );
+  assert.deepEqual(blockers.clear, []);
+  assert.equal(blockers.preserve.length, 1);
+});
+
+test("blockers outside the Blocked on me section are not touched", () => {
+  const tool = bp.createTool({ cwd: process.cwd() });
+  const blockers = tool.classifyBlockers(
+    [
+      "## Notes for the next session",
+      "",
+      "- The ruleset needs a paid plan, which is why we stopped.",
+    ].join("\n")
+  );
+  assert.deepEqual(blockers, { clear: [], preserve: [] });
+});
+
+test("requirement 14: a project blocked on a paid ruleset resumes on the local tier", () => {
+  const root = makeSandbox({
+    protectionState: false,
+    files: { "CONTINUE.md": BLOCKED_CONTINUE },
+  });
+  try {
+    const result = planRefusalTool(root).migrate();
+
+    assert.equal(result.previousTier, null, "this project predates the protection state file");
+    assert.equal(result.state.tier, "local");
+    assert.equal(result.state.verified, true);
+    assert.equal(result.state.visibility, "private", "visibility is preserved through migration");
+    assert.equal(result.state.visibilityChanged, false);
+    assert.equal(result.gate.satisfied, true);
+
+    assert.equal(result.blockers.clear.length, 1);
+    assert.equal(result.blockers.preserve.length, 2);
+    assert.deepEqual(result.recordUpdates.continueMd.clear, result.blockers.clear);
+    assert.deepEqual(result.recordUpdates.continueMd.preserve, result.blockers.preserve);
+    assert.match(result.recordUpdates.continueMd.note, /narrower trust boundary/);
+
+    assert.match(result.recordUpdates.decisionsMd, /managed local enforcement/);
+    assert.match(result.recordUpdates.decisionsMd, /was not changed/);
+    assert.match(result.recordUpdates.decisionsMd, /Trust boundary:/);
+    assert.match(result.recordUpdates.environmentMd, /## Default-branch protection/);
+
+    assert.match(result.resumeAt, /satisfied/);
+
+    // Migration touches the file it owns and no lifecycle file.
+    assert.equal(fs.readFileSync(path.join(root, "CONTINUE.md"), "utf8"), BLOCKED_CONTINUE);
+    assert.ok(fs.existsSync(path.join(root, ".forge", "protection.json")));
+  } finally {
+    cleanup(root);
+  }
+});
+
+test("requirement 14: a project that previously recorded a failed remote attempt migrates too", () => {
+  const root = makeSandbox({
+    protectionState: {
+      tier: "remote",
+      mechanism: "github-ruleset",
+      verified: false,
+      problem: "ruleset creation refused: Upgrade to GitHub Pro",
+    },
+    files: { "CONTINUE.md": BLOCKED_CONTINUE },
+  });
+  try {
+    const result = planRefusalTool(root).migrate();
+    assert.equal(result.previousTier, "remote");
+    assert.equal(result.state.tier, "local");
+    assert.equal(result.gate.satisfied, true);
+    assert.equal(result.state.problem, undefined, "the stale failure must not survive the migration");
+  } finally {
+    cleanup(root);
+  }
+});
+
+/* ---------------- the gate as a command ---------------- */
+
+test("the gate subcommand exits zero only when the gate is satisfied", () => {
+  const satisfied = makeSandbox({
+    protectionState: {
+      tier: "local",
+      mechanism: "managed-pre-push-guard",
+      protections: ["deletion", "non-fast-forward"],
+      verified: true,
+      trustBoundary: bp.TRUST_BOUNDARY_LOCAL,
+    },
+  });
+  const unsatisfied = makeSandbox({
+    protectionState: {
+      tier: "local",
+      protections: ["deletion", "non-fast-forward"],
+      verified: false,
+    },
+  });
+  try {
+    const good = spawnSync(process.execPath, [TOOL_SRC, "gate"], { cwd: satisfied, encoding: "utf8" });
+    assert.equal(good.status, 0, good.stdout + good.stderr);
+    assert.match(good.stdout, /GATE SATISFIED/);
+
+    const bad = spawnSync(process.execPath, [TOOL_SRC, "gate"], { cwd: unsatisfied, encoding: "utf8" });
+    assert.equal(bad.status, 1);
+    assert.match(bad.stdout, /GATE NOT SATISFIED/);
+  } finally {
+    cleanup(satisfied);
+    cleanup(unsatisfied);
+  }
+});

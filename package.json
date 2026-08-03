@@ -1,0 +1,10 @@
+{
+  "name": "forge-workflow",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Development-time test harness for the forge-workflow Claude Code plugin. Not published, and not part of the installed plugin.",
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT"
+}

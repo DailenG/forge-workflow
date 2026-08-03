@@ -29,7 +29,7 @@ STRICT engages automatically regardless of recorded mode when a release is in re
 **Always-strict gates, in every mode.** These are the reason the phased design exists. Never pass one autonomously:
 
 - SRS approval
-- Whether the GitHub repository is public or private
+- Whether the remote repository is public or private, including any later change to it
 - Any command requiring elevation
 - Discarding, stashing, or destroying uncommitted work
 - Deleting a branch with unmerged commits
@@ -74,6 +74,15 @@ Branch per slice, commit freely on the branch, merge to main with `--no-ff`, tag
 - Never force push main. Never move an existing tag.
 - Never use `--no-verify`. The pre-push hook is the only automated gate before main; if it blocks you, fix what it caught or tell the user why it is blocking.
 - Commit the lockfile.
+
+### Default-branch protection
+
+The requirement is behavioural, not a named product feature: **the default branch must not be deletable and must not accept a non-fast-forward update**, while ordinary fast-forward pushes and `--no-ff` merges keep working. Phase 2 satisfies it at the strongest tier the host and account actually support, and records which.
+
+- **Tier 1, server side.** The host enforces it for every writer, including web UI and API writes. Preferred whenever available.
+- **Tier 2, managed local.** A pre-push guard enforces the same two rules. Its trust boundary is narrower and must be written down where it is used: it protects configured clones only, and not an unconfigured clone, a host API or web UI write, a deleted or edited hook, or an attacker holding valid credentials.
+
+Neither tier may be weakened or skipped, and neither may be traded for the other silently. Some hosts reserve tier 1 for paid plans on private repositories; that is a reason to use tier 2 and say so, never a reason to require a paid plan or to make a private repository public. Repository visibility changes only when the user asks for it.
 
 ## Secrets and safety
 

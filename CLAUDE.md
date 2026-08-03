@@ -64,9 +64,18 @@ skills/                the five skills (forge, forge-spec, forge-env, forge-code
 hooks/hooks.json       SessionStart, PreToolUse, PostToolUse, Stop wiring
 scripts/*.js           the four Node hook scripts
 templates/             project-file templates forge writes into user projects
+                       (branch-protection.js and history-guard.js are real,
+                       tested programs, not fill-in-the-blank scaffolds)
+tests/                 node:test suites, run with `node --test`
 docs/index.html        the hosted guide (GitHub Pages, main branch /docs)
 .github/               CI workflow, issue and PR templates, CI helper scripts
 ```
+
+Most of this repo is prompt text, which cannot be unit tested. Two shipped
+programs are the exception: `templates/branch-protection.js` and
+`templates/history-guard.js` run in the user's project rather than in Claude's
+context, so they have real tests under `tests/`. Changing either without
+running `node --test` is how a guard silently stops guarding.
 
 ---
 
@@ -111,8 +120,14 @@ What is hot vs what needs a reload:
 Validate before committing anything:
 
 ```powershell
+node --test
 claude plugin validate --strict .
 ```
+
+The disposable-remote tests create bare repositories under the system temp
+directory and push to them. They never touch a real remote, and every cleanup
+is refused unless the path is a directory the tool itself created with its own
+prefix.
 
 ---
 
