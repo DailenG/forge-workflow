@@ -85,6 +85,8 @@ Walk these in order. Stop at the first match. That is the current phase.
 | 9 | Backlog empty, a release gate fails | Release blocked | **STRICT.** Report exactly which gate and what is needed |
 | 10 | All requirements closed and released | Complete | Report status, ask what is next |
 
+A completed Phase 2 record reads `Phase: 2`, `Gate: PASSED`, `Current task: begin the Phase 3 build plan`, a clean working tree, `docs/ENVIRONMENT.md` saying Phase 2 environment bootstrap is complete, and no active bootstrap claim left in `TODO.md`. That is row 5, not a discrepancy; the passed gate is the handoff marker, so do not stop merely because the phase number is still 2.
+
 The Phase 2 gate (row 4) is met only when all of these hold: toolchain smoke test passed in both directions, the remote repo exists with an initial commit pushed, the pre-push hook is proven to block, **default-branch history protection verified**, CI has gone green at least once, CodeGraph is verified, and the state files are committed.
 
 **Default-branch history protection verified** is satisfied by either of two things, and `node .forge/branch-protection.js gate` decides which:

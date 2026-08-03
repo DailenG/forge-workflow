@@ -274,4 +274,22 @@ Stop once the toolchain smoke test passes in both directions, the remote repo ex
 
 A host that withholds server-side protection behind a paid plan is not a failed gate. Verified local enforcement with its trust boundary recorded satisfies it.
 
+### Atomic Phase 2 completion
+
+Completing Phase 2 is one transition, not a series of edits: update every completion record before committing any of them. A record committed on its own contradicts the ones still stale, and the next session reads that as a record-versus-reality discrepancy and stops rather than building on it.
+
+1. `CONTINUE.md`, describing the state that exists after the completion commit rather than during it:
+   - `Phase: 2`
+   - `Gate: PASSED`
+   - `Current task: begin the Phase 3 build plan`
+   - `Branch:` the branch that will carry the commit
+   - `Working tree: clean`
+   - Next action: invoke `/forge` to begin Phase 3 planning
+2. `TODO.md`. It says `Phase 2 environment bootstrap is complete`, never `Phase 2 environment bootstrap is active`. Preserve existing blockers and permanent task IDs such as `T-ENV-001`: move finished environment work to Completed, and carry whatever still applies into the Phase 3 backlog without renumbering it.
+3. `docs/ENVIRONMENT.md`, saying Phase 2 is complete, keeping its verification evidence and known gaps.
+4. Commit those three together with any other completion-state file, in one conventional commit. Do not commit `pending commit` or similar transient wording; the committed record describes the resulting clean state.
+5. After committing, confirm `CONTINUE.md`, `TODO.md`, `docs/ENVIRONMENT.md`, git HEAD, the current branch, and working-tree status all agree. If one disagrees, stop under the record-versus-reality discrepancy gate.
+
+The completed record stays `Phase: 2` with `Gate: PASSED`. The passed gate is the handoff marker, not the phase number.
+
 Print the summary table. Do not begin implementation. Tell the user to run `/forge` when ready; it will detect that bootstrap is complete and move to the build phase.

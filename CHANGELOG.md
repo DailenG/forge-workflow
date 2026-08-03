@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-08-03
+
+Phase 2 completion is now one atomic state transition, so the handoff to Phase 3
+cannot leave two records disagreeing about the same phase.
+
+A completion wrote `CONTINUE.md` as `Phase: 2`, `Gate: PASSED` with Phase 3
+planning next, but left `TODO.md` saying "No implementation task is in progress.
+Phase 2 environment bootstrap is active." Both were committed, so the working
+tree was clean and the contradiction lived entirely in the content. The next
+session's reconciliation read it as a record-versus-reality discrepancy and
+stopped. That stop is correct behaviour, and it is the reason the project could
+not advance without a human untangling the two records by hand.
+
+### Fixed
+
+- Phase 2 completion in `forge-env` is one transition. `CONTINUE.md`, `TODO.md`,
+  and `docs/ENVIRONMENT.md` are all updated before any of them is committed,
+  committed together in one conventional commit, then reconciled against git
+  HEAD, the current branch, and working-tree status.
+- The completion record describes the state that exists after its own commit.
+  Transient wording such as `pending commit` is prohibited, because the
+  committed tree is already clean.
+- `TODO.md` says `Phase 2 environment bootstrap is complete` at completion. The
+  stale "is active" claim that caused the failure is named and prohibited.
+- Existing blockers and permanent task IDs such as `T-ENV-001` survive the
+  transition, with applicable work carried into the Phase 3 backlog without
+  renumbering.
+- The `forge` detection ladder recognises a completed Phase 2 record
+  (`Phase: 2`, `Gate: PASSED`) as the Phase 3 handoff rather than stopping
+  because the phase number is still 2.
+
+### Added
+
+- `tests/lifecycle-completion.test.js`, covering the transition's instruction
+  contract and cold starting a real git repository holding the completed record
+  through the SessionStart hook.
+
 ## [1.1.0] - 2026-08-02
 
 Capability-based default-branch protection, so a free-tier account with a
