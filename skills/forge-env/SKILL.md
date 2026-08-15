@@ -12,7 +12,7 @@ You are a build environment engineer preparing a Windows development workstation
 
 ## Read first
 
-Read `docs/SRS.md`, particularly the selected technology stack, the testing strategy, and the documentation plan. If it does not exist or names no stack, stop and say so.
+Read `docs/SRS.md`, particularly the selected technology stack, the testing strategy, the observability decisions, and the documentation plan. If it does not exist or names no stack, stop and say so. Read `docs/DESIGN.md` too: the design tier and the verification method behind each `UX-nnn` requirement decide what tooling Step 11a installs.
 
 ## Core principle
 
@@ -201,6 +201,41 @@ Sized to the SRS testing strategy and documentation plan:
 - If the documentation plan calls for web screenshots: Playwright plus shot-scraper, with a `shots.yml` stub
 - No docs site generator yet. Plain markdown under `docs/` rendered by GitHub is the starting point; MkDocs Material is the upgrade path when navigation and search are actually needed
 
+## Step 11a: Surface verification and observability tooling
+
+`docs/DESIGN.md` names a verification method per `UX-nnn` requirement, and the SRS observability section names a log destination and format. Both need a tool by the first slice, so install them here, sized to the design tier.
+
+For the design tier in play:
+
+- **GUI, web.** A browser driver the tests can use (Playwright or the stack's equivalent), shot-scraper for screenshots, and an accessibility scanner (axe-core, or the driver's built-in audit). Prove all three run against a throwaway page
+- **GUI, desktop or mobile.** Whatever driver the stack actually supports, and a working way to capture a window or simulator screenshot. Where no driver exists, say so plainly: those `UX-nnn` requirements verify by task walkthrough and captured screenshot instead, and the manual entries go in `docs/images/MANIFEST.md`
+- **CLI or TUI.** A harness that captures stdout, stderr, and exit code separately, so output shape is testable rather than eyeballed
+- **API.** The doc example runner for the stack (doctest, doc-tests, or a test that executes the README examples), so a shipped example cannot rot silently
+
+Then the observability layer, matching what the SRS decided:
+
+- The structured logging library, or the standard library if the decision was that plain is enough. Pin it and record it
+- A human-readable formatter for development, when the production format is machine-readable
+- The error reporting or crash-report path, only if the SRS calls for one. It stays off in development
+- A one-command way to see the logs while developing, and record that command in `CLAUDE.md`
+
+Do not install a metrics stack, a tracing backend, or an analytics SDK the SRS did not ask for. Record what was installed and what was deliberately skipped in `docs/ENVIRONMENT.md`.
+
+### Optional integrations, offered rather than assumed
+
+If Phase 1 chose one, set it up now; if Phase 1 did not raise it, offer the list once here, in one message, and take "none" as an answer. `forge-design` carries what each one contributes and the rules that keep it from becoming a dependency.
+
+```powershell
+claude plugin install frontend-design@claude-plugins-official
+claude plugin install figma@claude-plugins-official
+claude plugin install chrome-devtools-mcp@claude-plugins-official
+claude plugin install playwright@claude-plugins-official
+```
+
+`frontend-design` is one always-on skill for GUI tiers and adds no commands. `figma` and `chrome-devtools-mcp` bundle MCP servers, so confirm the server is reachable and its tools respond, the same check the code-intelligence layer gets. Claude Design is a hosted product rather than a plugin: nothing installs, the user works at `claude.com/product/design`, and what arrives here is a handoff bundle plus design system decisions, which go into `docs/design/` and the brief.
+
+Record the choice, including a declined one, in `docs/DECISIONS.md` and in `docs/ENVIRONMENT.md`. Nothing in the build, the docs, or the tests may require any of them.
+
 ## Step 12: CI
 
 Create `.github/workflows/ci.yml` running on every push to `main` and on every branch push:
@@ -220,12 +255,14 @@ Copy the templates from this plugin's `templates/` directory and fill them in.
 
 **`CLAUDE.md`** at the repository root:
 - A RESUME PROTOCOL section, first and prominent: at session start, read `CONTINUE.md`, then `TODO.md`, then `docs/SRS.md` before anything else
-- The project's build, test, run, and release commands
+- The project's build, test, run, release, and log-viewing commands, plus the command that runs the surface verification tooling (driver, screenshots, accessibility scan)
 - The CodeGraph command and tool reference discovered in Step 10
 - The typography rules written out in full rather than as a pointer: no em dashes or en dashes, no curly quotes, no ellipsis character, no non-breaking spaces, straight quotes only, and no `&&` in PowerShell. `CLAUDE.md` is always loaded for the project, so rules written here survive a skill-load miss
-- A pointer to the `forge-standards` skill for the remaining engineering standards
+- A pointer to the `forge-standards` skill for the remaining engineering standards, and to `forge-design` for the design tier, the polish checklists, and how UX observations are filed
 
-**`TODO.md`**, **`docs/traceability.md`**, **`docs/docs-manifest.yml`**, and **`docs/images/MANIFEST.md`** from the templates.
+**`TODO.md`** (with its UX Debt section), **`docs/traceability.md`**, **`docs/docs-manifest.yml`**, and **`docs/images/MANIFEST.md`** from the templates.
+
+`docs/DESIGN.md` already exists from Phase 1. Fill in the tooling it now has for each verification method, and leave the design decisions alone: changing one is an amendment, not bootstrap work.
 
 `CONTINUE.md` already exists from Phase 1. Update its header rather than recreating it:
 
@@ -264,13 +301,15 @@ Write `docs/ENVIRONMENT.md`:
 - Pre-push hook verification evidence
 - The default-branch protection section, from `node .forge/branch-protection.js report`. It carries the provider, the tier, the mechanism, the trust boundary, and the case-by-case evidence
 - CodeGraph verbatim command list and MCP tool list
+- Surface verification tooling: the driver, screenshot path, and accessibility scanner in force per design tier, with the command that proved each, and the `UX-nnn` methods that fall back to a task walkthrough because no driver exists
+- Observability layer: logging library and format, the development log command, and what was deliberately not installed
 - Known gaps, workarounds, anything needing revisiting
 
 Append version choices to `docs/DECISIONS.md`.
 
 ## Gate
 
-Stop once the toolchain smoke test passes in both directions, the remote repo exists with an initial commit pushed, the pre-push hook is proven to block, **default-branch history protection is verified at either tier** (`node .forge/branch-protection.js gate` exits 0), CI is green, CodeGraph is verified, and the state files are committed.
+Stop once the toolchain smoke test passes in both directions, the remote repo exists with an initial commit pushed, the pre-push hook is proven to block, **default-branch history protection is verified at either tier** (`node .forge/branch-protection.js gate` exits 0), CI is green, CodeGraph is verified, the tooling each `UX-nnn` verification method needs is installed and proven or its absence is recorded with the fallback method, and the state files are committed.
 
 A host that withholds server-side protection behind a paid plan is not a failed gate. Verified local enforcement with its trust boundary recorded satisfies it.
 

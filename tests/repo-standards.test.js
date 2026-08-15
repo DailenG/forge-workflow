@@ -172,6 +172,7 @@ test("the shipped templates the environment phase copies all exist", () => {
     "lefthook.yml",
     "ci.yml",
     "CONTINUE.md",
+    "DESIGN.md",
     "TODO.md",
     "traceability.md",
     "docs-manifest.yml",

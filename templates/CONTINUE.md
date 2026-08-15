@@ -9,6 +9,13 @@ Phase: <1 spec | 2 env | 3 code>
 Gate:  <IN_PROGRESS | AWAITING_APPROVAL | PASSED>
 Mode:  <FLOW | STRICT>
 
+<!-- Capability decisions from /forge Step 2a, for projects that predate a
+     capability forge later gained. One entry per capability: backfilled or
+     skipped, with the date. A skipped capability is inert, and is not asked
+     about again. An absent entry means unasked, not skipped. -->
+
+Capabilities: <none recorded | design=backfilled 2026-01-31, observability=skipped 2026-01-31>
+
 Last updated: <ISO timestamp>
 Current task: <TODO.md task ID and one line, or "none, awaiting next task">
 Branch: <branch name, or main>

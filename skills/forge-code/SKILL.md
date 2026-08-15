@@ -17,11 +17,12 @@ You are the implementing engineer for this project. `forge-standards` carries th
 3. `docs/SRS.md`
 4. `docs/ENVIRONMENT.md`
 5. `docs/DECISIONS.md`
-6. `docs/traceability.md`
+6. `docs/DESIGN.md`
+7. `docs/traceability.md`
 
 If any is missing, stop and say so.
 
-Then print a build plan: the vertical slices you intend to deliver, in order, each mapped to the requirement IDs it satisfies. Order slices so the riskiest and most architecturally load-bearing work happens first, not the easiest. Write the plan into `TODO.md` as tasks. Wait for approval before writing code.
+Then print a build plan: the vertical slices you intend to deliver, in order, each mapped to the requirement IDs it satisfies, including any `UX-nnn` it closes, and naming the surfaces from the design brief it creates or changes. Order slices so the riskiest and most architecturally load-bearing work happens first, not the easiest. Write the plan into `TODO.md` as tasks. Wait for approval before writing code.
 
 ## The slice loop
 
@@ -51,6 +52,14 @@ Before modifying any existing symbol, run CodeGraph impact analysis on it. If th
 
 Do not refactor beyond the current slice without asking.
 
+### 3a. Design pass, for any slice that touches a surface
+
+Once the tests pass, run the real thing and use it: the states, the primary tasks it touches, keyboard only for a GUI, and the words it puts on screen. `forge-design` has the full pass and the severity scale. Every observation is either fixed here or filed as `UXD-nnn` in `TODO.md`; a `blocks` finding is fixed here.
+
+Run the slice's failure path too, and read the log output it produces. That is the only way the observability decisions in the SRS turn out to have been implemented.
+
+A project that predates this discipline may have it recorded as skipped in the `Capabilities:` line of `CONTINUE.md`, in which case this step and its close-out items do not apply. `/forge` Step 2a owns that decision; do not relitigate it per slice.
+
 ### 4. Close the slice
 
 A slice is done when all of these hold:
@@ -63,7 +72,10 @@ A slice is done when all of these hold:
 - Errors are handled, not swallowed
 - Documentation for it is written, and its manifest entries are current
 - The full test suite passes, not only the new tests
-- You have actually run the thing, not only its tests
+- You have actually run the thing, not only its tests, and looked at every surface it changed
+- Every UX observation from the design pass is fixed or carries a `UXD-nnn` entry, with no `blocks` severity left open on this surface
+- New surfaces are appended to the design brief's inventory, and closed `UX-nnn` rows are in `docs/traceability.md`
+- The failure paths log what the SRS observability section says they log, and you have read that output
 - The pre-push hook passes without `--no-verify`
 - `TODO.md` and `CONTINUE.md` reflect reality
 
@@ -73,7 +85,7 @@ If the slice went wrong, delete the branch with `git branch -D` rather than unwi
 
 ### 5. Report
 
-Print: slice name, requirement IDs closed, tests added and what they prove, what works now, what does not yet, what is next.
+Print: slice name, requirement IDs closed including `UX-nnn`, tests added and what they prove, what the design pass found and where each finding went, what works now, what does not yet, what is next.
 
 In FLOW mode, continue straight into the next slice after reporting. In STRICT mode, or when a release is in reach, wait for confirmation. `forge-standards` lists which gates are always strict.
 
@@ -96,17 +108,20 @@ Never silently widen or narrow scope. A requirement you decided was impractical 
 
 ## Releases
 
-Cadence, gates, and the release checklist are in `forge-standards`. The execution order in this phase:
+Cadence, gates, and the release checklist are in `forge-standards`. The last stretch of a milestone is finish work rather than feature work: expect the final slices before a release to come out of the UX debt register, and plan for them instead of treating them as overrun.
 
-1. CI green and the full suite green, coverage reported
-2. Traceability matrix complete for every requirement claimed in this release
-3. Regenerate API reference and architecture docs from CodeGraph queries
-4. Confirm no screenshots are STALE or MISSING
-5. Run git-cliff to update `CHANGELOG.md`
-6. Commit, then create an annotated tag
-7. Publish a GitHub Release with `gh`, using the changelog section as the body
-8. Add a MILESTONE paragraph at the top of the release notes: plain language, stating what this release proves the project can now do. This is what someone reads to know where things stand
-9. Update `CONTINUE.md` with the new release
+The execution order in this phase:
+
+1. Run the `forge-design` polish pass over every surface this milestone touched. Clear the `finish` and `degrades` items or get a decision to slip each one, and record the run, the findings, and their dispositions in the polish log in `docs/DESIGN.md`
+2. CI green and the full suite green, coverage reported
+3. Traceability matrix complete for every requirement claimed in this release, `UX-nnn` included
+4. Regenerate API reference and architecture docs from CodeGraph queries
+5. Confirm no screenshots are STALE or MISSING
+6. Run git-cliff to update `CHANGELOG.md`
+7. Commit, then create an annotated tag
+8. Publish a GitHub Release with `gh`, using the changelog section as the body
+9. Add a MILESTONE paragraph at the top of the release notes: plain language, stating what this release proves the project can now do. This is what someone reads to know where things stand
+10. Update `CONTINUE.md` with the new release
 
 Tagging or publishing a release is an always-strict gate.
 
@@ -124,4 +139,4 @@ Read the documentation for an external contract rather than inferring it. When t
 
 ## Start now
 
-Read the six files listed above, then print the build plan.
+Read the seven files listed above, then print the build plan.

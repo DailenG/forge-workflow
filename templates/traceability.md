@@ -26,6 +26,16 @@ the test is a benchmark, a load run, or a scripted check rather than a unit test
 |---|---|---|---|---|---|
 | NFR-001 | <short description> | | NONE | | |
 
+## Experience requirements
+
+UX-nnn requirements carry a named verification method from the forge-design
+skill: interaction test, accessibility scan, visual check, or task walkthrough.
+A visual check names the screenshot in docs/images/MANIFEST.md that proves it.
+
+| Req ID | Requirement | Method | Evidence | Status | Last verified |
+|---|---|---|---|---|---|
+| UX-001 | <short description> | interaction test | `tests/...::test_name` | NONE | |
+
 ## Manual verification log
 
 For anything marked MANUAL, record each verification so the claim is auditable.

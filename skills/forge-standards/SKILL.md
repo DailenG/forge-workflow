@@ -37,6 +37,8 @@ STRICT engages automatically regardless of recorded mode when a release is in re
 - Tagging or publishing a release
 - Anything the pre-push hook blocked. Report it, never bypass it
 - Adding a dependency not named in the SRS
+- Slipping a polish pass finding, or releasing with a `blocks` or `degrades` UX defect open on a surface the release claims
+- Uploading repository contents, screenshots of real data, or user data to an external service the SRS did not name, including a hosted design tool
 - Any discrepancy between recorded state and the repository
 
 FLOW removes the confirmation prompt between units of work. It never skips a phase's own rules or an always-strict gate.
@@ -61,6 +63,28 @@ Test taxonomy, so you are deliberate about the level you write:
 - End to end: the smallest set that proves the critical paths. They are slow and brittle, so they earn their place.
 
 Default weighting is many unit, some integration, few end to end. Deviate only with a stated reason.
+
+## Design and UX
+
+`forge-design` owns the design tier, the brief in `docs/DESIGN.md`, the UX requirement rules, and the polish checklists. Two of its rules are standards, because they are what stops experience work from evaporating under delivery pressure:
+
+- **Every UX observation gets a disposition.** Fixed in the slice, or filed as `UXD-nnn` in the UX Debt section of `TODO.md` with a severity and what fixed would look like. Calling it subjective is not a disposition, and neither is mentioning it in a slice report.
+- **A slice that changed a surface has been run and looked at**, in the browser, terminal, or application it ships in. Passing tests are not evidence about a surface.
+
+`UX-nnn` requirements are traced like functional ones. The polish pass runs before every minor and major tag; slipping one of its findings is the user's decision, recorded with the version it slips to.
+
+A project older than a capability is not in violation of it. The `Capabilities:` line in `CONTINUE.md` records what `/forge` Step 2a backfilled or skipped, and a recorded skip makes that capability's rules inert for that project. This applies to the observability section below too.
+
+## Observability
+
+Decided in Phase 1, provisioned in Phase 2, wired by the first slice that runs. A project whose answer is "stderr, structured off, nothing leaves the machine" has answered; an unrecorded answer means the first slice invents one.
+
+- **Log at the boundaries:** process start with its effective configuration, outbound calls and their outcome, state changes worth reconstructing, handled failures, and every unhandled one. Not every function.
+- **Levels mean things.** ERROR: someone must act. WARN: degraded but handled. INFO: lifecycle an operator reads. DEBUG: development only. The default runtime level is one a user or operator can read without a filter.
+- **Redact at the logging boundary, not the call site**, so a new call site cannot leak. Secrets, tokens, and PII per the SRS data section. No secrets in log output, ever.
+- **Anything leaving the machine is opt in**, off in development, named in the SRS, and documented where the user will see it. Crash reports, analytics, and usage telemetry alike.
+- **An error a user sees is a surface.** It names what failed, what was being attempted, and the next action, and it carries an identifier that also appears in the log so a report can be traced back.
+- **Read your own log output.** Run the slice's failure path and look at what it emits. Unread log output is unverified, and it is where both leaked secrets and useless messages hide.
 
 ## Git lifecycle
 
@@ -87,7 +111,6 @@ Neither tier may be weakened or skipped, and neither may be traded for the other
 ## Secrets and safety
 
 - No secrets in the repository, ever, including test fixtures and example configs. Ship `.env.example` with dummy values.
-- No secrets in log output. Redact at the logging boundary.
 - Validate input at trust boundaries.
 - Write `.gitignore` before the first commit. A secret committed once lives in history forever.
 
@@ -135,11 +158,11 @@ Documentation ships in the same commit as the code it describes.
 
 - v0.1.0 at the first slice that does something demonstrable end to end.
 - Minor bump per completed feature group, patch for fixes between them.
-- v1.0.0 only when every functional requirement is closed and every one has a passing mapped test.
+- v1.0.0 only when every functional requirement is closed with a passing mapped test, and every `UX-nnn` requirement is verified by its named method.
 - Pre-1.0 means the interface may break; the README should say so.
 - Never tag with CI red. Never move an existing tag.
 
-At each release: CI green, docs and API reference regenerated, no STALE or MISSING screenshots, traceability matrix complete for the requirements claimed, git-cliff run, annotated tag, GitHub Release published, and a plain-language MILESTONE paragraph at the top of the notes stating what this release proves the project can now do.
+At each release: CI green, docs and API reference regenerated, no STALE or MISSING screenshots, traceability matrix complete for the requirements claimed, the `forge-design` polish pass run over every surface the milestone touched with its findings recorded in the polish log, no open `blocks` or `degrades` UX debt on those surfaces except what the user agreed to slip, git-cliff run, annotated tag, GitHub Release published, and a plain-language MILESTONE paragraph at the top of the notes stating what this release proves the project can now do.
 
 ## Explaining the process
 

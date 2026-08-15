@@ -476,7 +476,12 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
     </button>
     <button class="rung" aria-expanded="false">
       <span class="n">08</span>
-      <span><span class="q">Everything on the list is done <span class="gate">&nbsp;gate</span></span>
+      <span><span class="q">Nothing left on the list, but it has not been over the whole thing yet</span>
+      <span class="a">Before it will propose a release, it does a finish-and-polish pass over every part this milestone touched: runs each one, looks at it properly, and reports what it found.</span></span>
+    </button>
+    <button class="rung" aria-expanded="false">
+      <span class="n">09</span>
+      <span><span class="q">The list is done and the polish pass is behind it <span class="gate">&nbsp;gate</span></span>
       <span class="a">Stops being autonomous and proposes a release. Releases always need your say-so.</span></span>
     </button>
   </div>
@@ -550,8 +555,8 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
 <span class="u">claude plugin install</span> forge-workflow@dailen</pre>
     <p>
       Confirm when it asks, then run <code>/reload-plugins</code> or restart Claude Code. Type
-      <code>/</code> and you should see <code>forge</code> in the list along with three others. Those
-      three are manual overrides you will probably never need.
+      <code>/</code> and you should see <code>forge</code> in the list along with four others. Those
+      four are manual overrides you will probably never need.
     </p>
     <p>
       When a new version ships later, <code>claude plugin marketplace update dailen</code> pulls it down.
@@ -624,14 +629,38 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
   <div class="prose">
     <h3 style="margin-top:2.2rem">The confidence score</h3>
     <p>
-      After each round it scores how well it understands ten areas, and reports
+      After each round it scores how well it understands eleven areas, and reports
       <strong>the lowest one</strong>, not the average. That is deliberate. Averaging lets a single
-      unanswered question hide behind nine confident ones, and that question is usually the one that
+      unanswered question hide behind ten confident ones, and that question is usually the one that
       wrecks the project later.
     </p>
     <p>
       It keeps going until the lowest score reaches 95. In practice that is six to eight rounds and
       maybe twenty minutes.
+    </p>
+
+    <p>
+      One of the eleven areas is what the thing should be like to use: which surfaces it has, the
+      handful of tasks people will do most often, how finished it needs to feel, and any
+      accessibility obligation you are under. A surface nobody described gets designed by accident,
+      so this one holds the score down like any other.
+    </p>
+    <p>
+      Phase 1 also writes a short design brief, <code>docs/DESIGN.md</code>, and settles what gets
+      written to a log and whether a failure ever gets reported back to whoever looks after the tool.
+      Both then become decisions you made, rather than whatever the first piece of building happened
+      to do.
+    </p>
+    <p>
+      If the thing has a real interface, it also tells you once what your options are for the visual
+      side, and takes "none of these" as an answer. <a href="https://claude.com/product/design">Claude
+      Design</a> is Anthropic's own design product: you explore looks and build clickable prototypes
+      there, and it can hand the result over to be built. There are also add-ons for Claude Code that
+      make generated screens look less generic, read an existing Figma design system, or drive a real
+      browser so it can take pictures of what it built. Whatever you choose, the decisions get copied
+      into the design brief in your project, so nothing in your repository depends on an outside
+      account still existing. And nothing about your code or your data goes to any of them without
+      asking you first.
     </p>
 
     <div class="note">
@@ -741,6 +770,13 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
         </p>
       </div>
     </div>
+
+    <p>
+      It also sets up the means to look at the thing later, not only to test it. For anything with a
+      visible interface that means a way to drive it, a way to capture pictures of it, and a checker
+      for contrast and keyboard use. Alongside that it installs the logging the spec asked for, so
+      the first piece of building cannot quietly invent its own.
+    </p>
 
     <div class="note">
       <h4>About that "pre-push check"</h4>
@@ -863,6 +899,21 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
       </p>
     </div>
 
+    <h3 style="margin-top:2.2rem">Looking at the thing, not just testing it</h3>
+    <p>
+      Passing tests only prove the thing does what it was asked to do. They say nothing about what it
+      is like to use. So once the tests are green, Forge runs the real thing and uses it: walks the
+      tasks people will do most, checks what it shows when there is nothing there yet, while it is
+      working, when something has gone wrong, and when it worked, drives it with the keyboard alone,
+      and reads the actual words on screen.
+    </p>
+    <p>
+      Every rough edge it finds is either fixed there and then or written down in a list of UX debt
+      with how much it hurts: blocks the task, makes it worse, or merely unfinished. Nothing gets
+      waved away as a matter of taste, because an observation nobody wrote down is an observation
+      that is gone.
+    </p>
+
     <p>
       After each slice you get a short report: what works now, what does not yet, what is next. By
       default it carries straight on to the next slice. If you would rather approve each one, say so
@@ -978,6 +1029,16 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
       <strong>checks the notes against the actual project</strong>. If the notes claim two tests are
       failing but three are, it says so and asks you rather than carrying on from a false picture.
     </p>
+    <p>
+      Forge itself keeps gaining habits, so a project you started months ago can be missing something
+      newer versions set up from the start, like the design brief, the list of rough edges, or the
+      decisions about what gets logged. That is not the project being broken, and it is not the notes
+      disagreeing with reality. Forge spots the gap, says what is missing and what it would cost to
+      add now, and asks once: add it now, add it as its own piece of work, or skip it for this
+      project. Skipping is offered but not recommended, because the checks that habit feeds go quiet
+      with it. Whatever you answer is written down so you are not asked again, and you can change
+      your mind later by saying so.
+    </p>
     <div class="note go">
       <h4>All you ever have to type</h4>
       <p><code>please continue</code> or <code>/forge</code>. Either works. You never have to remember what you were doing.</p>
@@ -1013,6 +1074,13 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
     </p>
 
     <p>
+      Before a numbered release it goes over every part the milestone touched against a checklist
+      matched to the kind of surface it is: screens, a command line, a library other people write
+      code against, or a service somebody has to run. What it found and what it fixed is written
+      down. Anything it would rather leave for a later version is yours to approve, not its own call.
+    </p>
+
+    <p>
       Each release comes with a plain-language paragraph saying what this version proves the tool can
       now do. That paragraph is what you will actually read in six months when you are trying to
       remember where you got to.
@@ -1030,8 +1098,9 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
       <thead><tr><th style="width:30%">File</th><th>What it is</th></tr></thead>
       <tbody>
         <tr><td><code>CONTINUE.md</code></td><td>Where things stand right now. The one that makes "please continue" work.</td></tr>
-        <tr><td><code>TODO.md</code></td><td>What is planned, what is being done, what is finished.</td></tr>
+        <tr><td><code>TODO.md</code></td><td>What is planned, what is being done, what is finished, and the rough edges still owed a fix.</td></tr>
         <tr><td><code>docs/SRS.md</code></td><td>The specification you approved. The source of truth for what is being built.</td></tr>
+        <tr><td><code>docs/DESIGN.md</code></td><td>What it should be like to use: the surfaces, the tasks that matter, the wording and look rules, and a log of every polish pass.</td></tr>
         <tr><td><code>docs/DECISIONS.md</code></td><td>Every choice made and why. Read this when you wonder "why on earth did we do it that way".</td></tr>
         <tr><td><code>docs/ENVIRONMENT.md</code></td><td>What is installed on your machine and what versions. How you would set this up again.</td></tr>
         <tr><td><code>docs/traceability.md</code></td><td>A grid matching every requirement to the test that proves it.</td></tr>
@@ -1092,6 +1161,7 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
           <tr><td><code>/forge-spec</code></td><td>Force the describing phase.</td></tr>
           <tr><td><code>/forge-env</code></td><td>Force the setup phase.</td></tr>
           <tr><td><code>/forge-code</code></td><td>Force the building phase.</td></tr>
+          <tr><td><code>/forge-design</code></td><td>Force a design and polish pass.</td></tr>
         </tbody>
       </table>
     </div>

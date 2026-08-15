@@ -41,6 +41,7 @@ Read, skipping anything absent:
 - `CONTINUE.md` (phase, gate, mode, current task, next action)
 - `TODO.md`
 - `docs/SRS.md`
+- `docs/DESIGN.md` (design tier, surfaces, polish log)
 - `docs/traceability.md`
 - `CLAUDE.md` (project commands)
 
@@ -70,6 +71,35 @@ Commit identity comes from git, never from the record. Older projects carry a `L
 
 If `CONTINUE.md` is missing, badly stale, or contradicted by the tree, reconstructing accurate state IS the next action. Rebuild it from git history, the tests, and the code, report what you found, rewrite the file, then continue.
 
+## Step 2a: Capability backfill
+
+Forge itself gains capabilities over time, so a project started under an older version can be mid-Phase-3 with artifacts that its Phase 1 and Phase 2 never produced. **A missing capability is not a record-versus-reality discrepancy.** Do not stop under Step 2 for one, and do not treat it as damage: the project was correct under the version that built it.
+
+Check for these, cheaply, from what you already read:
+
+| Missing | Signal | Backfill |
+|---|---|---|
+| Design brief | no `docs/DESIGN.md` | `forge-design`, "Retrofitting a project already under way" |
+| UX requirements | brief exists, no `UX-` IDs in `docs/SRS.md` | Same, from the surfaces that already exist. Amending the SRS is a gate |
+| UX debt register | `TODO.md` has no UX Debt section | Add the section from `templates/TODO.md`, then seed it with one design pass per existing surface |
+| Observability decisions | `docs/SRS.md` has no observability section, or it says nothing testable | Extract the decisions per `forge-spec` "Observability, in detail", amend the SRS, and file the wiring as a slice if the code does not already do it |
+| Surface verification tooling | `docs/ENVIRONMENT.md` records none, and a `UX-` requirement needs it | `forge-env` Step 11a, for the tiers in play |
+| External design tools | a GUI tier, and `docs/DECISIONS.md` records no choice about them | Offer the list from `forge-design` "External design tools" once, take "none" as an answer, and record it. Nothing installs without the user asking, and nothing is uploaded to a hosted service without a gate |
+
+Raise the whole set once, in one message, ordered by what it would change about the work in front of you. For each: what it is, what backfilling costs now, and what shipping without it means. Then offer three answers, and say which you recommend:
+
+1. **Backfill now**, before the current work continues. Recommended when a surface is still being built, or a release is in reach
+2. **Backfill as its own slice**, scheduled next. Recommended mid-slice, so the current branch stays coherent
+3. **Skip for this project.** Not recommended, and say why in one line rather than sermonizing: the gates that capability feeds go inert, so nothing will catch what it was there to catch
+
+Record the answer immediately, in the `Capabilities:` line of `CONTINUE.md` and as a dated entry in `docs/DECISIONS.md`. Then honour it:
+
+- **Backfilled** capabilities behave as though they had always been there
+- **Skipped** capabilities are inert. Their gate items do not block a release, their ladder rows do not match, and you do not ask again. Note the skip in one line at each release report, so it stays visible without becoming nagging
+- A capability with no recorded answer is unasked, not skipped. Ask it
+
+Reversing a skip needs no ceremony: the user says so, you run the backfill, and you update the record.
+
 ## Step 3: Detection ladder
 
 Walk these in order. Stop at the first match. That is the current phase.
@@ -83,13 +113,16 @@ Walk these in order. Stop at the first match. That is the current phase.
 | 5 | Bootstrap complete, no build plan in `TODO.md` | Ready to build | Run `forge-code`, starting with the build plan |
 | 6 | `TODO.md` has a task In Progress | Mid-slice | Resume that slice. See "Resuming a slice" below |
 | 7 | Nothing In Progress, backlog has slices | Between slices | Open the next backlog slice |
-| 8 | Backlog empty for this milestone, release gates pass | Release ready | **STRICT.** Propose the release, wait for confirmation |
-| 9 | Backlog empty, a release gate fails | Release blocked | **STRICT.** Report exactly which gate and what is needed |
-| 10 | All requirements closed and released | Complete | Report status, ask what is next |
+| 8 | Backlog empty for this milestone, polish pass not run over its surfaces | Polish due | **STRICT.** Run the `forge-design` polish pass, report the findings, then act on them |
+| 9 | Backlog empty, polish pass done, release gates pass | Release ready | **STRICT.** Propose the release, wait for confirmation |
+| 10 | Backlog empty, a release gate fails | Release blocked | **STRICT.** Report exactly which gate and what is needed |
+| 11 | All requirements closed and released | Complete | Report status, ask what is next |
+
+`degrades` severity UX debt due before this release is backlog, so row 7 opens it like any other slice. `finish` severity waits for the polish pass at row 8. The polish log in `docs/DESIGN.md` is what distinguishes row 8 from row 9: no entry for this milestone means the pass has not run. Row 8 does not match at all when `CONTINUE.md` records the design capability as skipped, and the same holds for the Phase 2 verification-tooling gate item; a skipped capability is inert, per Step 2a.
 
 A completed Phase 2 record reads `Phase: 2`, `Gate: PASSED`, `Current task: begin the Phase 3 build plan`, a clean working tree, `docs/ENVIRONMENT.md` saying Phase 2 environment bootstrap is complete, and no active bootstrap claim left in `TODO.md`. That is row 5, not a discrepancy; the passed gate is the handoff marker, so do not stop merely because the phase number is still 2.
 
-The Phase 2 gate (row 4) is met only when all of these hold: toolchain smoke test passed in both directions, the remote repo exists with an initial commit pushed, the pre-push hook is proven to block, **default-branch history protection verified**, CI has gone green at least once, CodeGraph is verified, and the state files are committed.
+The Phase 2 gate (row 4) is met only when all of these hold: toolchain smoke test passed in both directions, the remote repo exists with an initial commit pushed, the pre-push hook is proven to block, **default-branch history protection verified**, CI has gone green at least once, CodeGraph is verified, the tooling behind each `UX-nnn` verification method is installed and proven or its absence recorded with the fallback, and the state files are committed.
 
 **Default-branch history protection verified** is satisfied by either of two things, and `node .forge/branch-protection.js gate` decides which:
 
@@ -149,6 +182,8 @@ These are the gates the whole design exists to protect. Never pass one autonomou
 - Tagging or publishing a release
 - Anything the pre-push hook blocked. Report it, never bypass it
 - Adding a dependency that was not named in the SRS
+- Slipping a polish pass finding to a later version, or releasing with a `blocks` or `degrades` UX defect open on a surface this release claims
+- Uploading repository contents, a screenshot of real data, or user data to an external service the SRS did not name. A hosted design tool is one of these, however convenient
 - Any discrepancy between recorded state and reality
 
 ## Approval is one transition (row 2 to row 3)
@@ -172,7 +207,7 @@ When the user explicitly approves the SRS, the approval and the phase change are
 
 When the ladder points at a phase, invoke that phase's skill and follow it fully. Do not paraphrase a phase's instructions, and do not skip its gates because you are in FLOW mode.
 
-Phase skills: `forge-spec` (Phase 1), `forge-env` (Phase 2), `forge-code` (Phase 3). Engineering standards are in `forge-standards`, which loads automatically.
+Phase skills: `forge-spec` (Phase 1), `forge-env` (Phase 2), `forge-code` (Phase 3). Engineering standards are in `forge-standards`, which loads automatically. `forge-design` is the cross-cutting discipline for surfaces: the design tier, the brief in `docs/DESIGN.md`, UX requirements, the per-slice design pass, and the release polish pass. It applies inside every phase rather than being one, and a user who says the interface feels wrong is asking for it directly.
 
 ## Keeping state honest
 

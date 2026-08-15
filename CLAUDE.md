@@ -26,9 +26,9 @@ This is the source of the **forge-workflow** Claude Code plugin.
   then `claude plugin install forge-workflow@dailen`
 - Hosted guide: https://daileng.github.io/forge-workflow/ (served from `docs/`)
 
-The plugin ships four user commands (`/forge`, `/forge-spec`, `/forge-env`,
-`/forge-code`), an always-loaded `forge-standards` skill, four lifecycle hooks,
-their Node scripts, and project-file templates.
+The plugin ships five user commands (`/forge`, `/forge-spec`, `/forge-env`,
+`/forge-code`, `/forge-design`), an always-loaded `forge-standards` skill, four
+lifecycle hooks, their Node scripts, and project-file templates.
 
 ---
 
@@ -60,7 +60,8 @@ edits to the skills must preserve it.
 .claude-plugin/
   plugin.json          plugin manifest (name, version, author)
   marketplace.json     LOCAL DEV marketplace (name "dailen-dev", plugin source "./")
-skills/                the five skills (forge, forge-spec, forge-env, forge-code, forge-standards)
+skills/                the six skills (forge, forge-spec, forge-env, forge-code,
+                       forge-standards, forge-design)
 hooks/hooks.json       SessionStart, PreToolUse, PostToolUse, Stop wiring
 scripts/*.js           the four Node hook scripts
 templates/             project-file templates forge writes into user projects
@@ -232,6 +233,47 @@ If a user later wants something previously listed as a non-goal, they have to sa
 so explicitly; forge treats the non-goals list as a deliberate boundary, not an
 oversight.
 
+**A UX observation gets a disposition, never a shrug.** Design is a managed
+dimension of the lifecycle as of 1.2.0, owned by `forge-design`. Phase 1 gates on
+an experience coverage area and writes `docs/DESIGN.md`; every slice that touches
+a surface runs a design pass (run the real thing, walk the primary tasks, check
+the states, keyboard only, read the copy); and every finding is either fixed in
+that slice or filed as `UXD-nnn` in the UX Debt section of `TODO.md` with a
+severity. Calling a finding subjective is explicitly not a disposition. Before any
+minor or major tag, the polish pass runs the tier's checklist over every surface
+the milestone touched and records it in the polish log, and slipping a finding is
+an always-strict gate. Contributors leaning these prompts must keep the
+disposition rule and the polish gate: without them experience work evaporates
+under delivery pressure, which is the defect 1.2.0 exists to fix.
+
+**Observability is decided, not improvised.** Phase 1 extracts explicit logging,
+error reporting, telemetry, metrics, and audit decisions, including the answer
+"nothing leaves the machine". Anything leaving the machine is opt in and named in
+the SRS. Phase 2 provisions the layer; each slice reads its own failure-path log
+output.
+
+**External design tools are offered, never assumed, and never load bearing.**
+`forge-design` names Claude Design, the official-marketplace `frontend-design`,
+`figma`, `chrome-devtools-mcp`, and `playwright` plugins, and Claude Code's Chrome
+connection or macOS computer use, with what each contributes and where its output
+lands. Phase 1 raises the list while the design language is open, Phase 2 Step 11a
+installs whichever was chosen, and "none" is a recorded answer. Three invariants
+contributors must preserve, mirroring the code-intelligence layer's "it stays
+optional" rule: the repo's own brief is authoritative rather than the tool, a
+prototype is evidence rather than a requirement or an implementation, and
+uploading repository contents or real data to a hosted service is an
+always-strict gate.
+
+**An older project is not a broken project.** `/forge` Step 2a detects artifacts a
+project's earlier phases never produced, raises the whole set once, and offers
+backfill now, backfill as a slice, or skip for this project (marked not
+recommended). The answer lands in the `Capabilities:` line of `CONTINUE.md` and in
+`docs/DECISIONS.md`; a recorded skip makes that capability's gates and ladder rows
+inert and stops the asking. Two things contributors must not break: a missing
+capability is explicitly NOT a record-versus-reality discrepancy (otherwise every
+pre-1.2.0 project would halt on resume), and a skip is honoured rather than
+re-litigated per slice.
+
 **The safety nets that make "just say it" work without the user managing state:**
 
 - The SessionStart hook injects `CONTINUE.md` plus real git state at the start of
@@ -243,8 +285,9 @@ oversight.
 - Several actions are always confirmed regardless of FLOW or STRICT mode: SRS
   approval, repository visibility, elevation, discarding uncommitted work, deleting
   a branch with unmerged commits, amending the SRS, tagging or publishing a
-  release, adding a dependency not named in the SRS, and any record-versus-reality
-  discrepancy.
+  release, adding a dependency not named in the SRS, slipping a polish pass
+  finding or releasing over an open blocks or degrades UX defect, and any
+  record-versus-reality discrepancy.
 - The pre-push hook (build, tests, lint, secret scan) is the only automated gate
   before `main`. Forge never bypasses it and never uses `--no-verify`; it reports a
   block rather than working around it.

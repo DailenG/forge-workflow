@@ -7,6 +7,88 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-15
+
+Design, UX, and observability become managed parts of the lifecycle instead of
+things a slice was free to skip. The gap this closes: nothing owned the
+experience, slices closed on green tests, and a UX observation could be
+acknowledged and then evaporate. Now every observation carries a disposition,
+and the last stretch before a release is explicitly polish.
+
+### Added
+
+- `forge-design` skill and `/forge-design` command: the design tier (GUI,
+  CLI/TUI, API, Service), the design brief in `docs/DESIGN.md`, `UX-nnn`
+  requirements with a named verification method each, the per-slice design pass,
+  the `UXD-nnn` UX debt register with a blocks / degrades / finish severity
+  scale, and a per-tier release polish checklist. It loads whenever work touches
+  a surface rather than being a phase of its own.
+- `templates/DESIGN.md`: surface inventory, primary tasks with step counts,
+  design language decisions, platform conventions, accessibility target, copy
+  and tone rules, UX requirement index, and the polish log appended at each
+  release.
+- Phase 1 gains an eleventh critical coverage area, experience and interaction
+  design, so the confidence readout can no longer reach 95 with the experience
+  unspecified. It also writes `docs/DESIGN.md`, commits it with the Phase 1
+  safety net, and adds a design and accessibility story to the stack comparison.
+- Phase 1 extracts explicit observability decisions: log destination and format,
+  levels and the default, what is never logged, the error reporting route,
+  whether telemetry exists and its consent model, metrics and health, and the
+  audit trail with its retention. "Nothing leaves the machine" is an answer;
+  unrecorded is not.
+- Phase 2 Step 11a provisions what the verification methods need per design tier
+  (browser driver, screenshot capture, accessibility scanner, CLI output
+  harness, doc example runner) plus the logging layer the SRS asked for, and
+  records both in `docs/ENVIRONMENT.md`. The Phase 2 gate now covers it.
+- Phase 3 runs a design pass inside every slice that touches a surface, reads
+  its own failure-path log output, and reports where each finding went.
+- Detection ladder row 8, Polish due: a milestone with an empty backlog and no
+  polish log entry runs the polish pass before a release can be proposed. Former
+  rows 8 to 10 are now 9 to 11.
+- `forge-standards` gains a Design and UX section and an Observability section,
+  and the release checklist now requires the polish pass with its findings
+  recorded.
+- UX Debt section in `templates/TODO.md`, and an experience requirements table
+  in `templates/traceability.md`.
+- `/forge` Step 2a, capability backfill: a project started under an older forge
+  version is detected as missing an artifact rather than treated as broken. A
+  missing capability is explicitly not a record-versus-reality discrepancy, so it
+  does not trip the reconcile stop. Forge raises the whole set once and offers
+  three answers, recommending one: backfill now, backfill as its own slice, or
+  skip for this project (not recommended). The answer is recorded in a new
+  `Capabilities:` line in `CONTINUE.md` and in `docs/DECISIONS.md`, and a skip
+  makes that capability's gates and ladder rows inert instead of nagging.
+- `forge-design` "Retrofitting a project already under way": a short interview,
+  a surface inventory read off the code, the de facto design language written
+  down as it is, one `degrades`-and-above design pass per shipping surface, and
+  `UX-nnn` requirements for what already ships as an SRS amendment.
+- `forge-design` "External design tools": the options are named and offered rather
+  than assumed. Claude Design (Anthropic Labs, `claude.com/product/design`) for
+  exploration, prototypes, and a codebase-derived design system, whose handoff
+  bundle lands in `docs/design/` with its decisions transcribed into the brief;
+  the official-marketplace `frontend-design`, `figma`, `chrome-devtools-mcp`, and
+  `playwright` plugins; and Claude Code's own Chrome connection or macOS computer
+  use as the fallback for visual checks with no driver. Phase 1 raises the list
+  while the design language is still open, `forge-env` Step 11a installs whichever
+  was chosen, and "none" is a recorded answer. None of them may become a
+  prerequisite: the brief stays authoritative, and a prototype is evidence rather
+  than a requirement or an implementation.
+- `tests/design-and-observability.test.js`, holding the contract: the discipline
+  exists, every tier has a polish checklist, a slice cannot close over an
+  unlooked-at surface, and the redaction rule is stated once.
+
+### Changed
+
+- Slipping a polish finding, or releasing with a `blocks` or `degrades` UX
+  defect open on a surface the release claims, is an always-strict gate.
+- Uploading repository contents, a screenshot of real data, or user data to an
+  external service the SRS did not name, a hosted design tool included, is an
+  always-strict gate.
+- v1.0.0 now also requires every `UX-nnn` requirement verified by its named
+  method.
+- The log redaction rule moved out of Secrets and safety into the new
+  Observability section, so it is stated once.
+
 ## [1.1.2] - 2026-08-03
 
 The Phase 1 to 2 boundary, and the removal of one recorded field that could
@@ -214,7 +296,9 @@ Initial public release.
 - Illustrated user guide hosted on GitHub Pages.
 - Marketplace distribution via the `dailen` marketplace, plus a manual skills-directory install path.
 
-[Unreleased]: https://github.com/DailenG/forge-workflow/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/DailenG/forge-workflow/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/DailenG/forge-workflow/compare/v1.1.2...v1.2.0
+[1.1.2]: https://github.com/DailenG/forge-workflow/compare/v1.1.0...v1.1.2
 [1.1.0]: https://github.com/DailenG/forge-workflow/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/DailenG/forge-workflow/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/DailenG/forge-workflow/releases/tag/v0.1.0
