@@ -53,6 +53,8 @@ A backlog entry in `TODO.md` states why it is waiting, in one of three explicit 
 
 "Not for autonomous pickup" is not a disposition: it describes who acts, not why, and reads as deprioritized when it usually is not.
 
+Opening a Ready item never gets a second confirmation. The go-ahead already happened when it was captured as Ready; asking again at pickup time is the FLOW-mode confirmation prompt FLOW exists to remove, and doing it anyway is the same failure the disposition rule fixes, just moved one step later.
+
 ## Testing
 
 A slice without tests is not a slice.

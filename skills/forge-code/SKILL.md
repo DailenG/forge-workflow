@@ -24,6 +24,10 @@ If any is missing, stop and say so.
 
 Then print a build plan: the vertical slices you intend to deliver, in order, each mapped to the requirement IDs it satisfies, including any `UX-nnn` it closes, and naming the surfaces from the design brief it creates or changes. Order slices so the riskiest and most architecturally load-bearing work happens first, not the easiest. Write the plan into `TODO.md` as tasks. Wait for approval before writing code.
 
+## Live progress
+
+Mirror this phase into Claude Code's own todo list rather than saving it all for the end-of-run report: one item per slice in the build plan, and one item per step of the slice loop below for whichever slice is open. Check items off as they complete, so the run is watchable while it happens.
+
 ## The slice loop
 
 For each slice, in order:

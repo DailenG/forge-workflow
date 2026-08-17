@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-08-17
+
+### Added
+
+- Phase 3 mirrors its build plan and the open slice's steps into Claude Code's
+  own todo list as it works, instead of surfacing progress only in the
+  end-of-run report. Watchable while it happens, not just after.
+
+### Changed
+
+- Opening a Ready backlog item never gets a second confirmation. The
+  go-ahead already happened when it was captured as Ready; asking again at
+  pickup time was the same failure the disposition rule fixed, just moved one
+  step later.
+
 ## [1.2.1] - 2026-08-17
 
 ### Added
