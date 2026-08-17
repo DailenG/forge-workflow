@@ -43,6 +43,16 @@ STRICT engages automatically regardless of recorded mode when a release is in re
 
 FLOW removes the confirmation prompt between units of work. It never skips a phase's own rules or an always-strict gate.
 
+## Backlog dispositions
+
+A backlog entry in `TODO.md` states why it is waiting, in one of three explicit dispositions, and the disposition is reflected back in one line the moment the item is captured, not only when reporting status later:
+
+- **Ready** - queued to build, no open question. Proceeds under FLOW without asking.
+- **Needs decision: <the question>** - a named design or scope question blocks starting it.
+- **Deferred at your request** - the user said later or park it; do not raise it again until they do.
+
+"Not for autonomous pickup" is not a disposition: it describes who acts, not why, and reads as deprioritized when it usually is not.
+
 ## Testing
 
 A slice without tests is not a slice.

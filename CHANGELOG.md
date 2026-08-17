@@ -7,8 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-08-17
+
+### Added
+
+- Backlog dispositions in `forge-standards`: every `TODO.md` backlog entry
+  states why it is waiting as Ready, Needs decision, or Deferred at your
+  request, reflected back in one line at capture time. "Not for autonomous
+  pickup" conflated who acts with why, and read as deprioritized when it
+  usually was not.
+- Guide freshness checks in `tests/repo-standards.test.js`: every edition stamp
+  names the shipped version, the what-is-new banner tracks the current minor,
+  every shipped command appears in the guide, every detection ladder row has a
+  rung, and the design discipline is described. Stale documentation was the
+  defect here, so it is now a failing test rather than a thing to remember.
+- `CLAUDE.md` and `CONTRIBUTING.md` record updating the hosted guide as a
+  release step.
+
 ### Changed
 
+- Detection ladder row 7 opens the next Ready slice, surfaces a Needs-decision
+  item's named question, and leaves Deferred items alone, instead of treating
+  the whole backlog as one undifferentiated "open the next slice."
 - The hosted guide catches up with 1.2.0. It announced 1.0.0 in three places
   while the plugin shipped 1.2.0, and said nothing about the design pass, the UX
   debt register, the polish pass before a release, the observability decisions,
@@ -29,16 +49,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   offer, which is explicitly not a block.
 - The guide page declares a description, a canonical URL, and link-preview
   metadata, so a shared link is no longer a bare title.
-
-### Added
-
-- Guide freshness checks in `tests/repo-standards.test.js`: every edition stamp
-  names the shipped version, the what-is-new banner tracks the current minor,
-  every shipped command appears in the guide, every detection ladder row has a
-  rung, and the design discipline is described. Stale documentation was the
-  defect here, so it is now a failing test rather than a thing to remember.
-- `CLAUDE.md` and `CONTRIBUTING.md` record updating the hosted guide as a
-  release step.
 
 ## [1.2.0] - 2026-08-15
 

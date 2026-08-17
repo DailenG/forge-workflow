@@ -112,7 +112,7 @@ Walk these in order. Stop at the first match. That is the current phase.
 | 4 | `docs/ENVIRONMENT.md` exists but the Phase 2 gate is unmet | Bootstrap partial | Resume `forge-env` at the first failed item |
 | 5 | Bootstrap complete, no build plan in `TODO.md` | Ready to build | Run `forge-code`, starting with the build plan |
 | 6 | `TODO.md` has a task In Progress | Mid-slice | Resume that slice. See "Resuming a slice" below |
-| 7 | Nothing In Progress, backlog has slices | Between slices | Open the next backlog slice |
+| 7 | Nothing In Progress, backlog has slices | Between slices | Open the next Ready slice; surface a Needs-decision item's named question; leave Deferred items alone |
 | 8 | Backlog empty for this milestone, polish pass not run over its surfaces | Polish due | **STRICT.** Run the `forge-design` polish pass, report the findings, then act on them |
 | 9 | Backlog empty, polish pass done, release gates pass | Release ready | **STRICT.** Propose the release, wait for confirmation |
 | 10 | Backlog empty, a release gate fails | Release blocked | **STRICT.** Report exactly which gate and what is needed |
