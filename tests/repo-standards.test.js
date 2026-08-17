@@ -229,3 +229,89 @@ test("the standards state the protection policy once, provider neutrally", () =>
   assert.match(standards, /trust boundary/i);
   assert.doesNotMatch(standards, /Upgrade to GitHub Pro/);
 });
+
+/* ---------------- the hosted guide describes the shipped plugin ---------------- */
+
+/*
+ * docs/index.html is the only forge documentation a non-developer reads before
+ * installing, and it is the easiest file to leave behind at release time: it
+ * carries its own version stamps and its own copy of the detection ladder.
+ * These checks fail the moment it stops describing what actually ships.
+ */
+
+function guide() {
+  return read(path.join("docs", "index.html"));
+}
+
+function pluginVersion() {
+  return JSON.parse(read(path.join(".claude-plugin", "plugin.json"))).version;
+}
+
+test("every edition stamp in the hosted guide names the shipped version", () => {
+  const html = guide();
+  const version = pluginVersion();
+  const stamps = [
+    ["title block", /<span>Edition<\/span><b>v(\d+\.\d+\.\d+)/],
+    ["edition table", /<code>forge-workflow<\/code><br>v(\d+\.\d+\.\d+)/],
+    ["footer", /REVISED FOR v(\d+\.\d+\.\d+)/]
+  ];
+  for (const [where, pattern] of stamps) {
+    const found = html.match(pattern);
+    assert.ok(found, "the guide lost its " + where + " version stamp");
+    assert.strictEqual(
+      found[1],
+      version,
+      "the guide " + where + " still says v" + found[1] + ", plugin.json ships " + version
+    );
+  }
+});
+
+/*
+ * A patch release may leave the banner alone, since it changes nothing a reader
+ * of this guide would notice. A minor or major release changes behaviour by
+ * definition, so the banner has to be rewritten for it.
+ */
+test("the what-is-new banner tracks the current minor release", () => {
+  const found = guide().match(/New in v(\d+)\.(\d+)\.\d+/);
+  assert.ok(found, "the guide lost its what-is-new banner");
+  const shipped = pluginVersion().split(".");
+  assert.strictEqual(
+    found[1] + "." + found[2],
+    shipped[0] + "." + shipped[1],
+    "the banner announces v" + found[1] + "." + found[2] + ", the plugin ships " + shipped[0] + "." + shipped[1]
+  );
+});
+
+test("the hosted guide lists every command the plugin ships", () => {
+  const html = guide();
+  const commands = fs
+    .readdirSync(path.join(REPO_ROOT, "skills"))
+    .filter((name) => name !== "forge-standards")
+    .sort();
+  assert.ok(commands.length >= 5, "expected the phase skills plus the orchestrator");
+  for (const command of commands) {
+    assert.ok(
+      html.includes("<code>/" + command + "</code>"),
+      "the guide never mentions /" + command
+    );
+  }
+});
+
+test("the guide ladder has a rung for every detection ladder row", () => {
+  const rows = read(path.join("skills", "forge", "SKILL.md"))
+    .split("\n")
+    .filter((line) => /^\|\s*\d+\s*\|/.test(line)).length;
+  const rungs = guide().match(/<details class="rung">/g) || [];
+  assert.strictEqual(
+    rungs.length,
+    rows,
+    "the guide shows " + rungs.length + " rungs, the detection ladder has " + rows + " rows"
+  );
+});
+
+test("the guide describes the design and polish discipline", () => {
+  const html = guide();
+  assert.match(html, /polish pass/i);
+  assert.match(html, /UX debt/i);
+  assert.match(html, /<code>\/forge-design<\/code>/);
+});

@@ -142,11 +142,17 @@ prefix.
    changes (this file, `README.md`, `docs/`, `CONTRIBUTING.md`, `CHANGELOG.md`) do
    not need a bump.
 2. Add a `CHANGELOG.md` entry under a new version heading (Keep a Changelog format).
-3. Commit with a conventional-commit message, push to `main`. CI runs the validate
+3. **Update the hosted guide**, `docs/index.html`. It carries three version stamps
+   (title block, edition table, footer) and, for a minor or major release, a
+   what-is-new banner describing the change in the guide's own plain language.
+   `tests/repo-standards.test.js` fails on a stale stamp, on a banner left behind
+   at an older minor, on a command the guide never mentions, and on a detection
+   ladder that has grown a row the guide's ladder does not show.
+4. Commit with a conventional-commit message, push to `main`. CI runs the validate
    workflow on push and pull request.
-4. For a downloadable manual-install artifact, cut a release: annotated tag at the
+5. For a downloadable manual-install artifact, cut a release: annotated tag at the
    version, GitHub Release from the changelog section, attach a plugin zip.
-5. Users pull it with `claude plugin marketplace update dailen` then
+6. Users pull it with `claude plugin marketplace update dailen` then
    `claude plugin update forge-workflow`.
 
 Full contributor detail is in `CONTRIBUTING.md`.

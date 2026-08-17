@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The hosted guide catches up with 1.2.0. It announced 1.0.0 in three places
+  while the plugin shipped 1.2.0, and said nothing about the design pass, the UX
+  debt register, the polish pass before a release, the observability decisions,
+  or the capability backfill offer an older project now gets. It also never
+  mentioned that Phase 2 is written for Windows and PowerShell today, which is
+  the one thing a reader on a Mac needs to know before starting.
+- The guide's detection ladder shows all eleven rungs, including the two the
+  1.2.0 ladder added, and the rungs are now `details` elements, so they open
+  without JavaScript and drop the script that toggled them.
+- The guide claimed its glossary terms were underlined throughout the page while
+  carrying exactly one. It now defines repository, slice, and UX debt where those
+  words first appear, and the glossary itself gained the vocabulary 1.2.0
+  introduced: surface, design brief, design pass, UX debt, polish pass, gate,
+  autopilot, backfill.
+- The guide's blocked-by table covers the gates 1.2.0 added: a rough edge still
+  open on something the release claims, a request that would amend the spec, an
+  upload to an outside service the spec never named, and the capability backfill
+  offer, which is explicitly not a block.
+- The guide page declares a description, a canonical URL, and link-preview
+  metadata, so a shared link is no longer a bare title.
+
+### Added
+
+- Guide freshness checks in `tests/repo-standards.test.js`: every edition stamp
+  names the shipped version, the what-is-new banner tracks the current minor,
+  every shipped command appears in the guide, every detection ladder row has a
+  rung, and the design discipline is described. Stale documentation was the
+  defect here, so it is now a failing test rather than a thing to remember.
+- `CLAUDE.md` and `CONTRIBUTING.md` record updating the hosted guide as a
+  release step.
+
 ## [1.2.0] - 2026-08-15
 
 Design, UX, and observability become managed parts of the lifecycle instead of

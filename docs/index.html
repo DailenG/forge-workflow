@@ -4,6 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Forge: from idea to finished tool</title>
+<meta name="description" content="Forge is a gated spec-to-ship lifecycle for Claude Code. One command works out where your project stands and does the next thing: requirements, toolchain setup, then test-driven building. Written for people who are technical but do not write software.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#071A2C">
+<link rel="canonical" href="https://daileng.github.io/forge-workflow/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Forge">
+<meta property="og:title" content="Forge: from idea to finished tool">
+<meta property="og:description" content="A guide for people who are not developers. Three phases, hard stops where a human has to decide, and one command to remember.">
+<meta property="og:url" content="https://daileng.github.io/forge-workflow/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Forge: from idea to finished tool">
+<meta name="twitter:description" content="A guide for people who are not developers. Three phases, hard stops where a human has to decide, and one command to remember.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;600&display=swap" rel="stylesheet">
@@ -183,17 +195,17 @@ td code{white-space:nowrap}
 
 /* ---------- ladder ---------- */
 .ladder{display:grid;gap:.4rem;margin:1.8rem 0}
-.rung{
-  display:grid;grid-template-columns:2.3rem 1fr;gap:1rem;align-items:start;
-  border:1px solid var(--rule-soft);background:var(--ink-2);padding:.85rem 1rem;
-  cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%;transition:border-color .18s,background .18s;
-}
+.rung{border:1px solid var(--rule-soft);background:var(--ink-2);transition:border-color .18s,background .18s}
 .rung:hover{border-color:var(--rule);background:var(--ink-3)}
-.rung[aria-expanded="true"]{border-color:var(--amber);background:var(--ink-3)}
+.rung[open]{border-color:var(--amber);background:var(--ink-3)}
+.rung summary{
+  display:grid;grid-template-columns:2.3rem 1fr;gap:1rem;align-items:start;
+  padding:.85rem 1rem;cursor:pointer;list-style:none;font:inherit;color:inherit;
+}
+.rung summary::-webkit-details-marker{display:none}
 .rung .n{font-family:var(--mono);color:var(--amber);font-size:.9rem;padding-top:.05rem}
 .rung .q{font-weight:450}
-.rung .a{display:none;margin-top:.6rem;font-size:.9rem;color:var(--chalk-2);grid-column:2}
-.rung[aria-expanded="true"] .a{display:block}
+.rung .a{margin:0 1rem .95rem 4.3rem;font-size:.9rem;color:var(--chalk-2)}
 .rung .gate{color:var(--stop);font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase}
 
 /* ---------- step cards ---------- */
@@ -264,7 +276,7 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
       <div><span>Audience</span><b>Technical, not a developer</b></div>
       <div><span>Runs in</span><b>Claude Code</b></div>
       <div><span>Reading time</span><b>About 20 minutes</b></div>
-      <div><span>Edition</span><b>v1.0.0 &nbsp;/&nbsp; for Claude 5</b></div>
+      <div><span>Edition</span><b>v1.2.0 &nbsp;/&nbsp; for Claude 5</b></div>
     </div>
   </div>
 </header>
@@ -299,16 +311,28 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
 <main>
 
 <div class="note go">
-  <h4>New in v1.0.0 &nbsp;/&nbsp; tuned for Claude 5</h4>
+  <h4>New in v1.2.0 &nbsp;/&nbsp; how it feels to use is now part of the job</h4>
   <p>
-    Forge has been rewritten for the current generation of Claude models. The instructions
-    behind it are about a quarter shorter, because these models need far less hand-holding
-    than the ones Forge was originally written for.
+    A piece of work used to be finished when its tests went green. Tests only prove the thing
+    does what it was asked to do, and say nothing about what it is like to use. So anything
+    with a screen, a command line, or a published interface now also gets used before it
+    counts as done: the common tasks walked, the empty and error states checked, the keyboard
+    tried on its own, the wording read. Every rough edge is fixed there or written down with
+    how much it hurts, and the stretch before a release is an explicit polish pass.
   </p>
   <p>
-    <strong>Nothing you do changes.</strong> Same three phases, same approval gate, same
-    files in your project. If you are on an older Claude 4 era model, there is a separate
-    edition for you: see <a href="#edition">which edition</a> below.
+    Phase 1 also settles what gets written to a log and whether a failure is ever reported
+    back to you, so that is a decision you made rather than whatever the first piece of
+    building happened to invent.
+  </p>
+  <p>
+    <strong>Already have a project on an older Forge?</strong> Nothing breaks and nothing is
+    treated as damaged. Forge notices what is missing, says what adding it now would cost, and
+    asks you once. See <a href="#away">walking away and coming back</a>.
+  </p>
+  <p>
+    On an older Claude 4 era model? There is a separate edition for you: see
+    <a href="#edition">which edition</a> below.
   </p>
 </div>
 
@@ -439,51 +463,50 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
   </div>
 
   <div class="ladder">
-    <button class="rung" aria-expanded="false">
-      <span class="n">01</span>
-      <span><span class="q">There is no written spec yet</span>
-      <span class="a">Brand new project. It starts interviewing you about your idea.</span></span>
-    </button>
-    <button class="rung" aria-expanded="false">
-      <span class="n">02</span>
-      <span><span class="q">A spec exists but you have not approved it <span class="gate">&nbsp;gate</span></span>
-      <span class="a">It stops. It summarises what it wrote and waits. It will not approve its own work, no matter how confident it is.</span></span>
-    </button>
-    <button class="rung" aria-expanded="false">
-      <span class="n">03</span>
-      <span><span class="q">Spec approved, computer not set up yet</span>
-      <span class="a">Moves to Phase 2 and starts checking what is installed on your machine.</span></span>
-    </button>
-    <button class="rung" aria-expanded="false">
-      <span class="n">04</span>
-      <span><span class="q">Setup started but something did not finish</span>
-      <span class="a">Picks up at the exact item that failed rather than starting the whole setup again.</span></span>
-    </button>
-    <button class="rung" aria-expanded="false">
-      <span class="n">05</span>
-      <span><span class="q">Bench ready, nothing built yet</span>
-      <span class="a">Writes a build plan: the list of pieces, hardest first, and asks you to approve the order.</span></span>
-    </button>
-    <button class="rung" aria-expanded="false">
-      <span class="n">06</span>
-      <span><span class="q">You were halfway through something</span>
-      <span class="a">This is the one that matters most. It reads its notes, checks them against what is really on disk, and tells you if the two disagree before touching anything.</span></span>
-    </button>
-    <button class="rung" aria-expanded="false">
-      <span class="n">07</span>
-      <span><span class="q">Last piece finished, more still on the list</span>
-      <span class="a">Starts the next piece.</span></span>
-    </button>
-    <button class="rung" aria-expanded="false">
-      <span class="n">08</span>
-      <span><span class="q">Nothing left on the list, but it has not been over the whole thing yet</span>
-      <span class="a">Before it will propose a release, it does a finish-and-polish pass over every part this milestone touched: runs each one, looks at it properly, and reports what it found.</span></span>
-    </button>
-    <button class="rung" aria-expanded="false">
-      <span class="n">09</span>
-      <span><span class="q">The list is done and the polish pass is behind it <span class="gate">&nbsp;gate</span></span>
-      <span class="a">Stops being autonomous and proposes a release. Releases always need your say-so.</span></span>
-    </button>
+    <details class="rung">
+      <summary><span class="n">01</span><span class="q">There is no written spec yet</span></summary>
+      <p class="a">Brand new project. It starts interviewing you about your idea.</p>
+    </details>
+    <details class="rung">
+      <summary><span class="n">02</span><span class="q">A spec exists but you have not approved it <span class="gate">&nbsp;gate</span></span></summary>
+      <p class="a">It stops. It summarises what it wrote and waits. It will not approve its own work, no matter how confident it is.</p>
+    </details>
+    <details class="rung">
+      <summary><span class="n">03</span><span class="q">Spec approved, computer not set up yet</span></summary>
+      <p class="a">Moves to Phase 2 and starts checking what is installed on your machine.</p>
+    </details>
+    <details class="rung">
+      <summary><span class="n">04</span><span class="q">Setup started but something did not finish</span></summary>
+      <p class="a">Picks up at the exact item that failed rather than starting the whole setup again.</p>
+    </details>
+    <details class="rung">
+      <summary><span class="n">05</span><span class="q">Bench ready, nothing built yet</span></summary>
+      <p class="a">Writes a build plan: the list of pieces, hardest first, and asks you to approve the order.</p>
+    </details>
+    <details class="rung">
+      <summary><span class="n">06</span><span class="q">You were halfway through something</span></summary>
+      <p class="a">This is the one that matters most. It reads its notes, checks them against what is really on disk, and tells you if the two disagree before touching anything.</p>
+    </details>
+    <details class="rung">
+      <summary><span class="n">07</span><span class="q">Last piece finished, more still on the list</span></summary>
+      <p class="a">Starts the next piece. A rough edge bad enough to matter is a piece of work like any other, so it gets picked up here rather than waiting for the end.</p>
+    </details>
+    <details class="rung">
+      <summary><span class="n">08</span><span class="q">Nothing left on the list, but it has not been over the whole thing yet</span></summary>
+      <p class="a">Before it will propose a release, it does a finish-and-polish pass over every part this milestone touched: runs each one, looks at it properly, and reports what it found.</p>
+    </details>
+    <details class="rung">
+      <summary><span class="n">09</span><span class="q">The list is done and the polish pass is behind it <span class="gate">&nbsp;gate</span></span></summary>
+      <p class="a">Stops being autonomous and proposes a release. Releases always need your say-so.</p>
+    </details>
+    <details class="rung">
+      <summary><span class="n">10</span><span class="q">The list is done but a release check is failing <span class="gate">&nbsp;gate</span></span></summary>
+      <p class="a">Says exactly which check and what would clear it, and stops there. A requirement with no test proving it, or a rough edge still open on something this release claims to deliver, both land here.</p>
+    </details>
+    <details class="rung">
+      <summary><span class="n">11</span><span class="q">Everything in the spec is built and released</span></summary>
+      <p class="a">Reports where the project stands and asks what you want next. More capability means amending the spec, which is a gate of its own.</p>
+    </details>
   </div>
 </section>
 
@@ -509,7 +532,7 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
       <tbody>
         <tr>
           <td><strong>A current Claude model</strong><br>Claude 5 era. This is almost certainly you.</td>
-          <td><code>forge-workflow</code><br>v1.0.0</td>
+          <td><code>forge-workflow</code><br>v1.2.0</td>
           <td><code>/forge</code></td>
         </tr>
         <tr>
@@ -571,13 +594,29 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
       </p>
     </div>
 
+    <div class="note">
+      <h4>Windows, Mac, or Linux</h4>
+      <p>
+        Describing the idea and building it work the same on every system. The setup phase is the
+        one exception: the commands it uses to take stock of your machine and install what is
+        missing are written for <strong>Windows and PowerShell</strong> today. On a Mac or on
+        Linux it still runs, but during that phase it translates as it goes and uses your own
+        installer instead, so say which system you are on when it starts and expect it to lean on
+        you slightly more there.
+      </p>
+    </div>
+
     <h3 style="margin-top:2.2rem">The manual way, if you would rather</h3>
     <p>
       Prefer to drop the folder into place by hand? Download the zip from the
       <a href="https://github.com/DailenG/forge-workflow/releases">releases page</a>, close Claude Code,
       then extract it so the folder lands here:
     </p>
-<pre>C:\Users\&lt;you&gt;\.claude\skills\forge-workflow\</pre>
+<pre><span class="c"># Windows</span>
+C:\Users\&lt;you&gt;\.claude\skills\forge-workflow\
+
+<span class="c"># Mac and Linux</span>
+~/.claude/skills/forge-workflow/</pre>
     <p>
       On Windows, that <code>.claude</code> folder is hidden. Paste the path into the Explorer address
       bar rather than trying to click your way to it. Check it worked:
@@ -587,6 +626,10 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
 
 <span class="c"># should list forge-workflow@skills-dir</span>
 <span class="u">claude plugin list</span></pre>
+    <p>
+      On a Mac or on Linux, make the background scripts runnable afterwards:
+      <code>chmod +x ~/.claude/skills/forge-workflow/scripts/*.js</code>. On Windows, skip that.
+    </p>
     <p>
       Restart Claude Code and you land in the same place as the two-command install above.
     </p>
@@ -658,7 +701,7 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
       there, and it can hand the result over to be built. There are also add-ons for Claude Code that
       make generated screens look less generic, read an existing Figma design system, or drive a real
       browser so it can take pictures of what it built. Whatever you choose, the decisions get copied
-      into the design brief in your project, so nothing in your repository depends on an outside
+      into the design brief in your project, so nothing in your <button class="term" data-t="repository" data-d="A folder containing your project plus its complete history. Every version of every file, forever. Usually shortened to 'repo'.">repository</button> depends on an outside
       account still existing. And nothing about your code or your data goes to any of them without
       asking you first.
     </p>
@@ -823,7 +866,7 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
   <h2>Phase three: building in slices</h2>
   <div class="prose">
     <p>
-      Work happens in <strong>slices</strong>. A slice is one complete piece of usable behaviour, not
+      Work happens in <strong><button class="term" data-t="slice" data-d="One complete piece of working behaviour, built and tested end to end. A slice you can run and look at, not one technical layer of the thing.">slices</button></strong>. A slice is one complete piece of usable behaviour, not
       one technical layer. "Scan a folder and print what it found" is a slice. "The database code" is
       not, because on its own it does nothing you can look at.
     </p>
@@ -908,7 +951,7 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
       and reads the actual words on screen.
     </p>
     <p>
-      Every rough edge it finds is either fixed there and then or written down in a list of UX debt
+      Every rough edge it finds is either fixed there and then or written down in a list of <button class="term" data-t="UX debt" data-d="A rough edge found and not fixed on the spot, recorded with how much it hurts: blocks the task, makes it worse, or merely unfinished. It is owed a fix, not forgotten.">UX debt</button>
       with how much it hurts: blocks the task, makes it worse, or merely unfinished. Nothing gets
       waved away as a matter of taste, because an observation nobody wrote down is an observation
       that is gone.
@@ -958,6 +1001,22 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
         <tr>
           <td><strong>Screenshots missing</strong></td>
           <td>Documentation needs a picture Claude cannot take, usually of a window on your screen. It tells you exactly which one and what should be visible in it.</td>
+        </tr>
+        <tr>
+          <td><strong>Cannot release, a rough edge is still open</strong></td>
+          <td>Something this release claims to deliver has a known problem that blocks a task or makes it noticeably worse, and it is still on the list. Fix it, or say explicitly that it waits for a later version. Leaving it for later is your call, never Claude's.</td>
+        </tr>
+        <tr>
+          <td><strong>That would change the spec</strong></td>
+          <td>You asked for something the approved spec does not cover, or a new outside component is needed to do it. It stops, states the amendment, and waits. One deliberate confirmation, then it carries on.</td>
+        </tr>
+        <tr>
+          <td><strong>That would send your work somewhere else</strong></td>
+          <td>Something wants to upload your code, a screenshot of real data, or user data to an outside service the spec never named, a hosted design tool included. It always asks first.</td>
+        </tr>
+        <tr>
+          <td><strong>Something newer is missing from this project</strong></td>
+          <td>Not a block, and not the project being broken. Forge has gained a habit since this project started. It says what is missing and asks once whether to add it now, add it as its own piece of work, or skip it.</td>
         </tr>
       </tbody>
     </table>
@@ -1104,6 +1163,9 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
         <tr><td><code>docs/DECISIONS.md</code></td><td>Every choice made and why. Read this when you wonder "why on earth did we do it that way".</td></tr>
         <tr><td><code>docs/ENVIRONMENT.md</code></td><td>What is installed on your machine and what versions. How you would set this up again.</td></tr>
         <tr><td><code>docs/traceability.md</code></td><td>A grid matching every requirement to the test that proves it.</td></tr>
+        <tr><td><code>docs/images/</code></td><td>Pictures the documentation refers to, plus a list of which ones still need taking.</td></tr>
+        <tr><td><code>docs/design/</code></td><td>Only if you use an outside design tool: what it handed over. The decisions are copied into the design brief, so the project never depends on that tool still existing.</td></tr>
+        <tr><td><code>.forge/</code></td><td>The guard that refuses a history-destroying save, and a note of which kind of protection is in force. Leave it alone.</td></tr>
         <tr><td><code>CHANGELOG.md</code></td><td>What changed in each release, written automatically.</td></tr>
         <tr><td><code>README.md</code></td><td>How to install and use the thing you built. Written for someone who has never seen it.</td></tr>
       </tbody>
@@ -1140,6 +1202,14 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
         <tr><td><strong>Release / tag</strong></td><td>A numbered, frozen snapshot. Tags never move once created.</td></tr>
         <tr><td><strong>Spec / SRS</strong></td><td>The written description of what is being built, agreed before building starts.</td></tr>
         <tr><td><strong>Requirement</strong></td><td>One numbered, provable statement of something the tool must do.</td></tr>
+        <tr><td><strong>Surface</strong></td><td>Anything a person or another program meets your tool through: a screen, a command line, a published interface, a service.</td></tr>
+        <tr><td><strong>Design brief</strong></td><td>The short written statement of what the thing should be like to use. The project's own answer, not a tool's.</td></tr>
+        <tr><td><strong>Design pass</strong></td><td>Running the real thing and using it, rather than only testing it. Done inside the piece of work, not saved for the end.</td></tr>
+        <tr><td><strong>UX debt</strong></td><td>A rough edge that was found and not fixed on the spot, written down with how much it hurts: blocks the task, makes it worse, or merely unfinished.</td></tr>
+        <tr><td><strong>Polish pass</strong></td><td>The sweep over everything a release touches, before the release is even proposed.</td></tr>
+        <tr><td><strong>Gate</strong></td><td>A point where Claude stops and a human decides. It cannot pass one on its own, whatever mode it is in.</td></tr>
+        <tr><td><strong>Autopilot</strong></td><td>The default: it carries on from one piece to the next and reports as it goes. Say the word and it waits for you each time instead. Near a release it stops asking permission to ask.</td></tr>
+        <tr><td><strong>Backfill</strong></td><td>Adding something to an older project that newer versions of Forge set up from the start.</td></tr>
       </tbody>
     </table>
   </div>
@@ -1175,6 +1245,8 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
           <tr><td><em>"Wait for me each slice"</em></td><td>Switches off autopilot.</td></tr>
           <tr><td><em>"Where are we?"</em></td><td>Status without doing any work.</td></tr>
           <tr><td><em>"Why did we decide that?"</em></td><td>It looks it up in the decisions log.</td></tr>
+          <tr><td><em>"This feels wrong to use"</em></td><td>Asks for a design pass on that surface, however vague the complaint.</td></tr>
+          <tr><td><em>"What is still rough?"</em></td><td>Reads back the rough edges on the list and how bad each one is.</td></tr>
         </tbody>
       </table>
     </div>
@@ -1205,7 +1277,7 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
 </div>
 
 <footer>
-  <div class="sheet">FORGE &nbsp;/&nbsp; GUIDE FOR NON-DEVELOPERS &nbsp;/&nbsp; SHEET 1 OF 1</div>
+  <div class="sheet">FORGE &nbsp;/&nbsp; GUIDE FOR NON-DEVELOPERS &nbsp;/&nbsp; REVISED FOR v1.2.0</div>
 </footer>
 
 </div>
@@ -1215,14 +1287,6 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
 <script>
 (function(){
   "use strict";
-
-  // Ladder rungs
-  document.querySelectorAll(".rung").forEach(function(b){
-    b.addEventListener("click",function(){
-      var open = b.getAttribute("aria-expanded") === "true";
-      b.setAttribute("aria-expanded", open ? "false" : "true");
-    });
-  });
 
   // Scroll spy on the phase rail
   var links = Array.prototype.slice.call(document.querySelectorAll(".rail a"));

@@ -47,6 +47,8 @@ So: any change to a skill, hook, script, or template must come with a version bu
 
 Add a matching entry to `CHANGELOG.md` under a new version heading.
 
+A version bump also carries a duty in the other direction: `docs/index.html`, the hosted guide, is what a non-developer reads before installing, and it states its own edition version. Update its three version stamps (title block, edition table, footer), and for a minor or major release rewrite the what-is-new banner in the guide's own plain language. `tests/repo-standards.test.js` fails on a stale stamp, a banner left at an older minor, a shipped command the guide never mentions, or a detection ladder row with no rung.
+
 ## Typography
 
 Forge enforces an ASCII-only typography rule on the projects it builds, so this repository obeys the same rule. Do not use em dashes, en dashes, curly quotes, ellipsis characters, non-breaking spaces, or the unicode minus sign in any file, including markdown and commit messages. Use plain hyphens and straight quotes. CI fails the build on any of these characters.
