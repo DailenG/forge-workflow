@@ -276,7 +276,7 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
       <div><span>Audience</span><b>Technical, not a developer</b></div>
       <div><span>Runs in</span><b>Claude Code</b></div>
       <div><span>Reading time</span><b>About 20 minutes</b></div>
-      <div><span>Edition</span><b>v1.2.3 &nbsp;/&nbsp; for Claude 5</b></div>
+      <div><span>Edition</span><b>v1.3.0 &nbsp;/&nbsp; for Claude 5</b></div>
     </div>
   </div>
 </header>
@@ -311,19 +311,29 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
 <main>
 
 <div class="note go">
-  <h4>New in v1.2.0 &nbsp;/&nbsp; how it feels to use is now part of the job</h4>
+  <h4>New in v1.3.0 &nbsp;/&nbsp; a release now hands you something you can download</h4>
   <p>
-    A piece of work used to be finished when its tests went green. Tests only prove the thing
-    does what it was asked to do, and say nothing about what it is like to use. So anything
-    with a screen, a command line, or a published interface now also gets used before it
-    counts as done: the common tasks walked, the empty and error states checked, the keyboard
-    tried on its own, the wording read. Every rough edge is fixed there or written down with
-    how much it hurts, and the stretch before a release is an explicit polish pass.
+    Forge used to ask, right at the start, how the finished thing would reach the people who
+    use it, write the answer down, and then never act on it. A release ended at a tag and a
+    page of notes, with nothing attached you could actually download. Now the first phase
+    recommends the simplest way to hand your project to someone (usually a versioned zip, a
+    double-click installer for Windows if that suits it better, a single file for a command
+    line tool) and the release builds exactly that, unpacks it somewhere clean to prove it
+    works, and attaches it to the release page.
   </p>
   <p>
-    Phase 1 also settles what gets written to a log and whether a failure is ever reported
-    back to you, so that is a decision you made rather than whatever the first piece of
-    building happened to invent.
+    Forge does the easy part and tells you plainly about the rest. It will say when a program
+    it built is unsigned, and therefore that Windows or macOS will warn people the first time
+    they run it. Signing it, putting it in an app store, or making it update itself stays your
+    call, and Forge will never quietly do any of that on your behalf. A website or a hosted
+    service has nothing to download, so Forge says so and attaches nothing rather than
+    inventing a file.
+  </p>
+  <p>
+    Also fixed: a rough edge deliberately put off until a later version used to vanish once
+    that version shipped or got skipped. It stayed on the list, waiting on a date that had
+    already passed, and nothing ever brought it back up. Every release now looks at what was
+    put off until it, and either fixes it or asks you where it goes next.
   </p>
   <p>
     <strong>Already have a project on an older Forge?</strong> Nothing breaks and nothing is
@@ -532,7 +542,7 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
       <tbody>
         <tr>
           <td><strong>A current Claude model</strong><br>Claude 5 era. This is almost certainly you.</td>
-          <td><code>forge-workflow</code><br>v1.2.3</td>
+          <td><code>forge-workflow</code><br>v1.3.0</td>
           <td><code>/forge</code></td>
         </tr>
         <tr>
@@ -1277,7 +1287,7 @@ C:\Users\&lt;you&gt;\.claude\skills\forge-workflow\
 </div>
 
 <footer>
-  <div class="sheet">FORGE &nbsp;/&nbsp; GUIDE FOR NON-DEVELOPERS &nbsp;/&nbsp; REVISED FOR v1.2.3</div>
+  <div class="sheet">FORGE &nbsp;/&nbsp; GUIDE FOR NON-DEVELOPERS &nbsp;/&nbsp; REVISED FOR v1.3.0</div>
 </footer>
 
 </div>

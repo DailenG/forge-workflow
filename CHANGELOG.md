@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.2.3] - 2026-08-21
+## [1.3.0] - 2026-08-21
 
 ### Fixed
 
@@ -26,6 +26,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Packaging is a decision Phase 1 makes and Phase 3 acts on
+  ([#1](https://github.com/DailenG/forge-workflow/issues/1)). The distribution
+  question was captured in the spec and never consumed, so no release ever
+  produced an artifact. `forge-spec` now recommends the easiest packaging
+  mechanism that fits the usage type and records it concretely in the SRS:
+  versioned zip or tarball by default, a 7-Zip self-extracting exe, a WiX MSI
+  as an explicit non-default upgrade, or a single binary release asset for a
+  CLI or library with the natural registry named and handed to the user. A
+  hosted service records "not applicable" and gets no artifact, because
+  packaging there is deployment. Phase 3 builds that artifact at release time,
+  smoke-tests it on a clean target outside the build tree, and attaches it to
+  the GitHub Release, warning that any exe or MSI is unsigned and will trip
+  SmartScreen or Gatekeeper. Signing, notarization, app stores, and auto-update
+  stay user-owned; forge produces the easy artifact and names the rest.
+- `scripts/package.js` builds this plugin's own manual-install zip, and the
+  payload now includes `LICENSE`
+  ([#3](https://github.com/DailenG/forge-workflow/issues/3)). Every release so
+  far shipped MIT code in a bundle with no license text, because the artifact
+  was assembled by hand. The payload is declared in one place, expands
+  `skills/` and `templates/` against the real tree so a new file cannot be
+  dropped, and the build refuses by name when a member is missing.
 - `Slip target` column in the UX Debt register of `templates/TODO.md`, so the
   version a row waits on is recorded where the release gate can read it.
 - `forge-standards` section "Defects in the workflow itself": a gap in forge is

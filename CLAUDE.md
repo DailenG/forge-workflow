@@ -151,7 +151,9 @@ prefix.
 4. Commit with a conventional-commit message, push to `main`. CI runs the validate
    workflow on push and pull request.
 5. For a downloadable manual-install artifact, cut a release: annotated tag at the
-   version, GitHub Release from the changelog section, attach a plugin zip.
+   version, GitHub Release from the changelog section, attach the plugin zip built
+   by `node scripts/package.js`. Never assemble that zip by hand. The payload list
+   lives in that script, which refuses to build if any member is missing.
 6. Users pull it with `claude plugin marketplace update dailen` then
    `claude plugin update forge-workflow`.
 

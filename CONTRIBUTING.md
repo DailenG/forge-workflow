@@ -47,6 +47,8 @@ So: any change to a skill, hook, script, or template must come with a version bu
 
 Add a matching entry to `CHANGELOG.md` under a new version heading.
 
+The manual-install zip attached to a release is built with `node scripts/package.js`, never assembled by hand; the payload list lives in that script and the build fails if any member is missing.
+
 A version bump also carries a duty in the other direction: `docs/index.html`, the hosted guide, is what a non-developer reads before installing, and it states its own edition version. Update its three version stamps (title block, edition table, footer), and for a minor or major release rewrite the what-is-new banner in the guide's own plain language. `tests/repo-standards.test.js` fails on a stale stamp, a banner left at an older minor, a shipped command the guide never mentions, or a detection ladder row with no rung.
 
 ## Typography

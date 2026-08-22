@@ -124,8 +124,9 @@ The execution order in this phase:
 6. Run git-cliff to update `CHANGELOG.md`
 7. Commit, then create an annotated tag
 8. Publish a GitHub Release with `gh`, using the changelog section as the body
-9. Add a MILESTONE paragraph at the top of the release notes: plain language, stating what this release proves the project can now do. This is what someone reads to know where things stand
-10. Update `CONTINUE.md` with the new release
+9. Build the artifact the SRS distribution section names, smoke test it on a clean target by extracting or running it somewhere that is not the build tree, and attach it to the release with `gh release upload`. When the recorded mechanism is "not applicable, hosted service", or the project otherwise has no installable output, say that in one line in the release notes and attach nothing. Whenever an exe or an MSI is produced, warn that it is unsigned and will trip SmartScreen on Windows or Gatekeeper on macOS. Signing, notarization, app store submission, and auto-update stay user-owned; never do any of them silently
+10. Add a MILESTONE paragraph at the top of the release notes: plain language, stating what this release proves the project can now do. This is what someone reads to know where things stand
+11. Update `CONTINUE.md` with the new release
 
 Tagging or publishing a release is an always-strict gate.
 

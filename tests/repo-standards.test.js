@@ -203,6 +203,85 @@ test("the changelog records the protection change", () => {
   assert.match(changelog, /protection/i);
 });
 
+/* ---------------- the release artifact ships what it claims ---------------- */
+
+/*
+ * Issue #3: every hand-assembled release zip shipped without LICENSE. The
+ * payload now lives in scripts/package.js, so these checks read it back and
+ * hold it against the real tree: a new skill, template, or hook script cannot
+ * be dropped from the download.
+ */
+
+function payload() {
+  return require(path.join(REPO_ROOT, "scripts", "package.js")).resolveFiles();
+}
+
+test("the packaging script exists and parses", () => {
+  const script = path.join("scripts", "package.js");
+  assert.ok(fs.existsSync(path.join(REPO_ROOT, script)), "missing " + script);
+  const res = node(["--check", script]);
+  assert.equal(res.status, 0, res.stderr);
+});
+
+test("the release payload carries the licence, the readme, and both manifests", () => {
+  const files = payload();
+  for (const rel of [
+    "LICENSE",
+    "README.md",
+    ".claude-plugin/plugin.json",
+    "hooks/hooks.json",
+  ]) {
+    assert.ok(files.includes(rel), "the release artifact would ship without " + rel);
+  }
+});
+
+test("the release payload covers every skill, template, and hook script", () => {
+  const files = payload();
+
+  const skills = fs
+    .readdirSync(path.join(REPO_ROOT, "skills"))
+    .filter((name) => fs.statSync(path.join(REPO_ROOT, "skills", name)).isDirectory());
+  assert.ok(skills.length >= 5, "expected the phase skills plus the orchestrator");
+  for (const skill of skills) {
+    assert.ok(
+      files.includes("skills/" + skill + "/SKILL.md"),
+      "the release artifact would ship without skills/" + skill + "/SKILL.md"
+    );
+  }
+
+  const templates = fs
+    .readdirSync(path.join(REPO_ROOT, "templates"))
+    .filter((name) => fs.statSync(path.join(REPO_ROOT, "templates", name)).isFile());
+  assert.ok(templates.length >= 10, "expected the shipped template set");
+  for (const template of templates) {
+    assert.ok(
+      files.includes("templates/" + template),
+      "the release artifact would ship without templates/" + template
+    );
+  }
+
+  const hooks = new Set(read(path.join("hooks", "hooks.json")).match(/scripts\/[\w.-]+\.js/g));
+  assert.ok(hooks.size >= 4, "expected every hook event to name a script");
+  for (const hook of hooks) {
+    assert.ok(files.includes(hook), "the release artifact would ship without " + hook);
+  }
+});
+
+test("every file the release payload names exists on disk", () => {
+  for (const rel of payload()) {
+    assert.ok(
+      fs.existsSync(path.join(REPO_ROOT, rel)),
+      "the packaging script names a file that is not there: " + rel
+    );
+  }
+});
+
+test("CLAUDE.md builds the artifact with the packaging script", () => {
+  const doc = read("CLAUDE.md");
+  assert.match(doc, /node scripts\/package\.js/);
+  assert.match(doc, /never assemble that zip by hand/i);
+});
+
 /* ---------------- the skills say what the code does ---------------- */
 
 test("the environment phase describes both protection tiers", () => {

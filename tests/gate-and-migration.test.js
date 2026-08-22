@@ -24,7 +24,16 @@ const {
   gitContextHandlers,
   json,
   TOOL_SRC,
+  REPO_ROOT,
 } = require("./helpers/sandbox.js");
+
+function read(rel) {
+  return fs.readFileSync(path.join(REPO_ROOT, rel), "utf8");
+}
+
+const FORGE_SPEC = read(path.join("skills", "forge-spec", "SKILL.md"));
+const FORGE_CODE = read(path.join("skills", "forge-code", "SKILL.md"));
+const FORGE_STANDARDS = read(path.join("skills", "forge-standards", "SKILL.md"));
 
 const PLAN_REFUSAL =
   "gh: Upgrade to GitHub Pro or make this repository public to enable this feature. (HTTP 403)";
@@ -355,4 +364,112 @@ test("the gate subcommand exits zero only when the gate is satisfied", () => {
     cleanup(satisfied);
     cleanup(unsatisfied);
   }
+});
+
+/* ---------------- issue #1: the packaging advisory and the release artifact ---------------- */
+
+/*
+ * Phase 1 recorded a distribution story that nothing downstream read, so no
+ * artifact was ever produced. The advisory now records a concrete mechanism,
+ * and the Phase 3 release order consumes it.
+ */
+
+function releaseSteps() {
+  const after = FORGE_CODE.split("The execution order in this phase:")[1].replace(/\r\n/g, "\n");
+  return after
+    .split("\n\n")[1]
+    .split("\n")
+    .map((line) => {
+      const m = /^(\d+)\.\s+(.*)$/.exec(line);
+      assert.ok(m, "unparsed release-order line: " + line);
+      return { n: Number(m[1]), text: m[2] };
+    });
+}
+
+function artifactStep() {
+  const steps = releaseSteps();
+  const step = steps.filter((s) => /gh release upload/.test(s.text));
+  assert.equal(step.length, 1, "exactly one step attaches the artifact");
+  return step[0].text;
+}
+
+test("issue 1: Phase 1 recommends a mechanism and records it where Phase 3 reads it", () => {
+  assert.match(FORGE_SPEC, /## Packaging and distribution, in detail/);
+  assert.match(FORGE_SPEC, /record the chosen mechanism in the SRS/i);
+  assert.match(
+    FORGE_SPEC,
+    /Deployment, distribution, update mechanism.*packaging mechanism chosen/,
+    "the SRS outline must carry the decision, not just the discussion"
+  );
+  assert.match(FORGE_SPEC, /an unrecorded answer produces no artifact/i);
+});
+
+test("issue 1: the easiest-means tier is named, with the default and the non-default marked", () => {
+  assert.match(FORGE_SPEC, /versioned zip or tarball of the build output/i);
+  assert.match(FORGE_SPEC, /The default\./);
+  assert.match(FORGE_SPEC, /7-Zip self-extracting exe/);
+  assert.match(FORGE_SPEC, /MSI built with WiX/);
+  assert.match(FORGE_SPEC, /not the easy default/, "the MSI must not read as the recommendation");
+  assert.match(FORGE_SPEC, /single binary attached to the GitHub Release is the default/);
+  assert.match(FORGE_SPEC, /npm, PyPI, crates\.io/, "the registry option is named but handed over");
+});
+
+test("issue 1: the heavy and the ill-fitting cases are handed to the user by name", () => {
+  assert.match(FORGE_SPEC, /Signing, notarization, app store submission, and auto-update are user-owned/);
+  assert.match(FORGE_SPEC, /"Not applicable, hosted service" is a complete and valid recorded answer/);
+  assert.match(FORGE_SPEC, /Packaging there means deployment, which forge does not own/);
+  assert.match(FORGE_SPEC, /a Windows artifact helps Windows users only/);
+  assert.match(FORGE_SPEC, /user-guided/, "mac and Linux formats stay with the user");
+});
+
+test("issue 1: no packaging mechanism adds an always-on dependency", () => {
+  assert.match(FORGE_SPEC, /zip or tarball path uses tooling already present/);
+  assert.match(FORGE_SPEC, /provisioned in Phase 2 only when that mechanism is the one chosen/);
+});
+
+test("issue 1: the Phase 3 release order builds, smoke tests, and attaches the artifact", () => {
+  const steps = releaseSteps();
+  assert.deepEqual(
+    steps.map((s) => s.n),
+    steps.map((_, i) => i + 1),
+    "the list is numbered 1..n with no repeat or gap"
+  );
+
+  const at = (re) => steps.findIndex((s) => re.test(s.text));
+  const tag = at(/annotated tag/);
+  const publish = at(/Publish a GitHub Release/);
+  const artifact = at(/gh release upload/);
+  assert.ok(tag !== -1 && publish !== -1, "the tag and release steps still exist");
+  assert.ok(artifact > tag, "nothing is packaged before the tag it belongs to");
+  assert.ok(artifact > publish, "an asset cannot be attached to a release that does not exist yet");
+
+  const step = steps[artifact].text;
+  assert.match(step, /Build the artifact the SRS distribution section names/);
+  assert.match(step, /smoke test it on a clean target/);
+  assert.match(step, /not the build tree/, "smoke testing in the build tree proves nothing");
+});
+
+test("issue 1: an exe or MSI is never shipped without the unsigned warning", () => {
+  const step = artifactStep();
+  assert.match(step, /unsigned/);
+  assert.match(step, /SmartScreen/);
+  assert.match(step, /Gatekeeper/);
+  assert.match(step, /never do any of them silently/);
+});
+
+test("issue 1: a project with no artifact says why and attaches nothing", () => {
+  const step = artifactStep();
+  assert.match(step, /not applicable, hosted service/);
+  assert.match(step, /attach nothing/);
+  assert.match(step, /say that in one line in the release notes/);
+});
+
+test("issue 1: the standards release checklist agrees with the phase", () => {
+  const releases = FORGE_STANDARDS.replace(/\r\n/g, "\n").split("\n## Releases\n")[1].split("\n## ")[0];
+  assert.match(releases, /At each release:/);
+  assert.match(releases, /artifact the SRS distribution section names/);
+  assert.match(releases, /smoke-tested on a clean target/);
+  assert.match(releases, /attached to that release/);
+  assert.match(releases, /why none applies/);
+  assert.match(releases, /unsigned-binary warning/);
 });

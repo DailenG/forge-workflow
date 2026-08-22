@@ -48,7 +48,7 @@ Then state: **OVERALL CONFIDENCE = the LOWEST score among the CRITICAL areas.** 
 5. **Data.** What is stored, where, who owns it, retention, privacy or regulatory exposure, volume, growth.
 6. **Integrations.** Every external system, API, or file format. Auth method and rate limits for each.
 7. **Authentication and authorization.** Identity source, session model, permission granularity, secrets handling.
-8. **Deployment and distribution.** How this reaches users, and how version two reaches them afterward.
+8. **Deployment and distribution.** How this reaches users, and how version two reaches them afterward. Do not stop at a note: recommend a packaging mechanism and record the one chosen, covered in detail below.
 9. **Testing and verification.** Covered in detail below.
 10. **Non-goals.** What this explicitly will not do. Push on this one; it is the most commonly skipped and the most useful.
 11. **Experience and interaction design.** Which surface classes exist (GUI, CLI or TUI, library API, operated service), the three to five primary tasks and what the user's path for each looks like today, the quality bar in their own words from throwaway internal tool to client-facing product, any existing design language, brand, or component library that constrains it, accessibility obligations whether legal or self-imposed, and which products they consider good or bad at this and specifically why. This gates: a surface specified without these gets designed by accident. `forge-design` owns what happens to the answers
@@ -107,6 +107,28 @@ Every project decides this, including the ones whose answer is "logs to stderr, 
 
 Record the outcome in the SRS observability section even when the answer is none, and mirror anything user-visible or privacy-relevant into the data and privacy sections.
 
+## Packaging and distribution, in detail
+
+The distribution answer is a decision, not a note. Name the easiest packaging mechanism that fits the recorded usage type, recommend it, name the heavier options as user-owned, and record the chosen mechanism in the SRS so Phase 3 can build it at release time. Forge produces the easy artifact and says what else is worth considering. It never silently does the trust-sensitive parts.
+
+Recommend from this tier, easiest first:
+
+- **A versioned zip or tarball of the build output.** The default. Cross-platform, near-zero cost, always available
+- **A 7-Zip self-extracting exe.** A double-click unpacker for Windows users, when extracting a zip is one step too many
+- **An MSI built with WiX.** An optional upgrade when a true install experience matters: Add/Remove Programs, Start Menu, repair. Authoring it has a real learning curve, so it is explicitly not the easy default. Recommend it only when the user wants that experience
+- **For a CLI tool or a library**, a single binary attached to the GitHub Release is the default. Name the natural registry as well (npm, PyPI, crates.io, NuGet, winget) and hand publishing to it to the user
+
+Signing, notarization, app store submission, and auto-update are user-owned. Name them where they apply and keep them out of the recommendation.
+
+Where the tier does not fit, name the case rather than recording something meaningless:
+
+- **Web app or hosted service:** no artifact. Packaging there means deployment, which forge does not own. "Not applicable, hosted service" is a complete and valid recorded answer
+- **Cross-platform desktop:** a Windows artifact helps Windows users only. The macOS and Linux formats (`.dmg`, `.pkg`, `.deb`, AppImage) are user-guided, matching Phase 2 being Windows-specific today. State that limit plainly rather than implying coverage the release will not have
+
+No mechanism here adds an always-on dependency. The zip or tarball path uses tooling already present, so it costs nothing. SFX or MSI tooling is provisioned in Phase 2 only when that mechanism is the one chosen here.
+
+Record the mechanism, the reason it fits the usage type, and the heavier options handed to the user in the SRS distribution section, and the decision itself in `docs/DECISIONS.md`.
+
 ## Platform and language selection
 
 Once access surfaces and core scope are settled, do this as an explicit deliverable.
@@ -151,7 +173,7 @@ At OVERALL CONFIDENCE 95 or higher, write `docs/SRS.md`:
 9. Data model and storage, including retention and privacy
 10. External integrations, one subsection each
 11. Authentication, authorization, secrets handling
-12. Deployment, distribution, update mechanism
+12. **Deployment, distribution, update mechanism:** including the packaging mechanism chosen, named concretely (versioned zip or tarball, 7-Zip SFX, WiX MSI, single binary release asset, registry publish) or recorded as "not applicable, hosted service", with the heavier options listed as user-owned. Phase 3 reads this line at release time, so an unrecorded answer produces no artifact
 13. **Observability, logging, and telemetry:** destination and format, levels and the default level, what is never logged and where it is redacted, the error reporting route, whether telemetry exists and its consent model, the metrics or health surface, and the audit trail with its retention
 14. **Testing strategy:** levels in scope, what is automated versus manual, integration test approach for each external system, test data strategy, coverage policy, and the definition of done for a requirement
 15. Documentation plan: which documents exist, who each is for, which parts need screenshots
