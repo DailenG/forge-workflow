@@ -64,10 +64,13 @@ Compare the record against reality:
 - Does the work `CONTINUE.md` describes as finished actually appear in `git log`?
 - Does the test suite result match? A red suite the record does not mention changes everything
 - Does `TODO.md` In Progress agree with the branch and the commits?
+- Does any recorded gate, backlog item, or UX debt slip target name a version that has already been published?
 
 Commit identity comes from git, never from the record. Older projects carry a `Last commit:` line in `CONTINUE.md`; it is stale by construction, since committing the file changes the commit the field names. Ignore it, reconcile against the SessionStart git summary and `git log`, and drop the line the next time you update the file. Its staleness is not a discrepancy.
 
 **If the record and reality disagree, stop.** Report the discrepancy and ask how to reconcile. Do not trust either side, and do not build on an unexplained inconsistency. This override applies in FLOW mode too.
+
+A recorded gate, backlog item, or slip target naming a version already published is a discrepancy of this kind. The version moved and the item did not, so the item is no longer gating anything: it reads as pending work behind a tag that has already shipped, or behind one the user chose to skip. Re-anchor it to the next real target, or close it, before continuing. Test counts and commits are not the only things that go stale; version anchors do, and they do it silently.
 
 If `CONTINUE.md` is missing, badly stale, or contradicted by the tree, reconstructing accurate state IS the next action. Rebuild it from git history, the tests, and the code, report what you found, rewrite the file, then continue.
 

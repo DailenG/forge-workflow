@@ -116,7 +116,7 @@ Cadence, gates, and the release checklist are in `forge-standards`. The last str
 
 The execution order in this phase:
 
-1. Run the `forge-design` polish pass over every surface this milestone touched. Clear the `finish` and `degrades` items or get a decision to slip each one, and record the run, the findings, and their dispositions in the polish log in `docs/DESIGN.md`
+1. Run the `forge-design` polish pass over every surface this milestone touched. Clear the `finish` and `degrades` items or get a decision to slip each one, and record the run, the findings, and their dispositions in the polish log in `docs/DESIGN.md`. In the same pass, sweep every open UX debt row whose slip target is at or below this version: closed, or re-anchored forward with the user's agreement
 2. CI green and the full suite green, coverage reported
 3. Traceability matrix complete for every requirement claimed in this release, `UX-nnn` included
 4. Regenerate API reference and architecture docs from CodeGraph queries

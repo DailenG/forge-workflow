@@ -24,11 +24,14 @@ Task IDs are permanent. Never renumber. Requirement IDs refer to docs/SRS.md.
 <Every UX observation the design pass did not fix in the slice. UXD IDs are
 permanent. Severity per the forge-design skill: blocks (never lands here, it is
 fixed in the slice), degrades (cleared before the next release), finish
-(cleared in the release polish pass). An observation with no ID here was lost.>
+(cleared in the release polish pass). An observation with no ID here was lost.
+Slip target is the version an open row is waiting on, and it is read again at
+that version: a tag never passes over an open row whose slip target is at or
+below it. Blank means the next release.>
 
-| ID | Surface | Observation | Severity | Fixed looks like | Status |
-|---|---|---|---|---|---|
-| UXD-001 | | | finish | | open |
+| ID | Surface | Observation | Severity | Fixed looks like | Slip target | Status |
+|---|---|---|---|---|---|---|
+| UXD-001 | | | finish | | v0.0.0 | open |
 
 ## Completed
 

@@ -83,7 +83,15 @@ Default weighting is many unit, some integration, few end to end. Deviate only w
 - **Every UX observation gets a disposition.** Fixed in the slice, or filed as `UXD-nnn` in the UX Debt section of `TODO.md` with a severity and what fixed would look like. Calling it subjective is not a disposition, and neither is mentioning it in a slice report.
 - **A slice that changed a surface has been run and looked at**, in the browser, terminal, or application it ships in. Passing tests are not evidence about a surface.
 
-`UX-nnn` requirements are traced like functional ones. The polish pass runs before every minor and major tag; slipping one of its findings is the user's decision, recorded with the version it slips to.
+`UX-nnn` requirements are traced like functional ones. The polish pass runs before every minor and major tag; slipping one of its findings is the user's decision, recorded in the row's `Slip target` column with the version it slips to.
+
+A slip target is a live anchor, not an annotation, so it gets read again:
+
+- **Before any tag**, every open row whose slip target is at or below the version being tagged is closed, or re-anchored forward with the user's agreement. A tag never passes silently over the debt that named it.
+- **When the user overrides a proposed version** (choosing `0.4.0` over `0.4.0-rc1`, say), sweep everything anchored to the version being skipped at the moment the override is recorded. The skipped version will never arrive, so nothing later will look at those rows on its own.
+- **A slip target naming a version already published is a discrepancy**, handled per `forge` Step 2, not stale prose to read past.
+
+Version-anchored debt goes invisible exactly when the version series moves on: the rows stay open, stay recorded, and stop gating anything.
 
 A project older than a capability is not in violation of it. The `Capabilities:` line in `CONTINUE.md` records what `/forge` Step 2a backfilled or skipped, and a recorded skip makes that capability's rules inert for that project. This applies to the observability section below too.
 
@@ -133,6 +141,10 @@ Neither tier may be weakened or skipped, and neither may be traded for the other
 - A repository with no LICENSE file is all rights reserved by default, not permissive.
 - Prefer the standard library for anything trivial. Pin versions.
 
+## Defects in the workflow itself
+
+A defect or gap in forge itself is filed upstream against the forge-workflow repository, not patched into the project that found it. The plugin resolves at runtime to `~/.claude/plugins/cache/<owner>/forge-workflow/<version>/`, so a local fix does not survive an update and every other project keeps the defect. File it, record the issue in `docs/DECISIONS.md`, and carry a local workaround only until the upstream fix ships.
+
 ## Modifying files
 
 Use the Edit tool to change existing files, not shell redirection or `Set-Content`. Shell rewrites bypass the typography hook, collapse CRLF on Windows, and have no undo. Confirm before destructive commands (recursive deletes, `git reset --hard`, `git clean -f`, `git checkout --`); these are on the always-strict list.
@@ -173,8 +185,9 @@ Documentation ships in the same commit as the code it describes.
 - v1.0.0 only when every functional requirement is closed with a passing mapped test, and every `UX-nnn` requirement is verified by its named method.
 - Pre-1.0 means the interface may break; the README should say so.
 - Never tag with CI red. Never move an existing tag.
+- **A user override of a proposed version sweeps the version being skipped.** When the user picks a different version than the one proposed, every open row anchored to the skipped version is re-anchored or closed at that moment, while someone is looking. A skipped version never arrives, so nothing downstream will ever check it.
 
-At each release: CI green, docs and API reference regenerated, no STALE or MISSING screenshots, traceability matrix complete for the requirements claimed, the `forge-design` polish pass run over every surface the milestone touched with its findings recorded in the polish log, no open `blocks` or `degrades` UX debt on those surfaces except what the user agreed to slip, git-cliff run, annotated tag, GitHub Release published, and a plain-language MILESTONE paragraph at the top of the notes stating what this release proves the project can now do.
+At each release: CI green, docs and API reference regenerated, no STALE or MISSING screenshots, traceability matrix complete for the requirements claimed, the `forge-design` polish pass run over every surface the milestone touched with its findings recorded in the polish log, no open `blocks` or `degrades` UX debt on those surfaces except what the user agreed to slip, no open UX debt whose recorded slip target is at or below this version (each such row is closed, or re-anchored forward with the user's agreement, before the tag), git-cliff run, annotated tag, GitHub Release published, and a plain-language MILESTONE paragraph at the top of the notes stating what this release proves the project can now do.
 
 ## Explaining the process
 

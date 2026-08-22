@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-08-21
+
+### Fixed
+
+- A slipped polish finding no longer goes orphaned when the version it slipped
+  to publishes without it ([#4](https://github.com/DailenG/forge-workflow/issues/4)).
+  The rule had a write side and no read side: a finding recorded as slipping to
+  a version stayed open, stayed recorded, and stopped gating anything once that
+  version shipped or was skipped. Now the anchor is read back in three places.
+  The release checklist in `forge-standards`, the Phase 3 release order, and the
+  `forge-design` polish pass all require every open UX debt row whose slip
+  target is at or below the version being tagged to be closed or re-anchored
+  forward before the tag. `forge` Step 2 treats an item anchored to an
+  already published version as a discrepancy rather than stale prose. A user
+  override of a proposed version sweeps whatever was anchored to the version
+  being skipped, at the moment the override is recorded.
+
+### Added
+
+- `Slip target` column in the UX Debt register of `templates/TODO.md`, so the
+  version a row waits on is recorded where the release gate can read it.
+- `forge-standards` section "Defects in the workflow itself": a gap in forge is
+  filed upstream against this repository rather than patched into the project
+  that found it. The plugin resolves at runtime to a versioned plugin cache
+  directory, so a local fix does not survive an update.
+
 ## [1.2.2] - 2026-08-17
 
 ### Added

@@ -168,6 +168,53 @@ test("slipping a polish finding is an always-strict gate in both places that lis
   }
 });
 
+/*
+ * Regression, issue #4: the write side of the slip rule existed and nothing ever
+ * read it back, so findings anchored to a version that shipped without them
+ * stopped gating anything while still reading as open work.
+ */
+test("a slipped finding is recorded where it can be read back", () => {
+  const todo = template("TODO.md");
+  assert.match(todo, /\| Slip target \|/, "the UX debt register needs a slip target column");
+  assert.match(todo, /Slip target is the version[\s\S]*read again/);
+
+  const designUx = STANDARDS.slice(STANDARDS.indexOf("## Design and UX"), STANDARDS.indexOf("## Observability"));
+  assert.match(designUx, /Slip target/);
+  assert.match(designUx, /live anchor/);
+});
+
+test("a tag cannot pass over debt whose slip target is at or below it", () => {
+  const releases = STANDARDS.slice(STANDARDS.indexOf("## Releases"));
+  assert.match(releases, /slip target is at or below this version/);
+  assert.match(releases, /re-anchored forward/);
+
+  const codeReleases = CODE.slice(CODE.indexOf("## Releases"), CODE.indexOf("## Documentation duties"));
+  assert.match(codeReleases, /slip target is at or below this version/);
+
+  const polish = DESIGN.slice(DESIGN.indexOf("## The polish pass"));
+  assert.match(polish, /at or below the version about to be tagged/);
+});
+
+test("overriding a proposed version sweeps the version being skipped", () => {
+  const releases = STANDARDS.slice(STANDARDS.indexOf("## Releases"));
+  assert.match(releases, /override of a proposed version/i);
+  assert.match(releases, /skipped version never arrives/i);
+});
+
+test("an item anchored to an already published version is a Step 2 discrepancy", () => {
+  const step2 = FORGE.slice(FORGE.indexOf("## Step 2: Reconcile"), FORGE.indexOf("## Step 2a"));
+  assert.match(step2, /slip target[\s\S]*already been published/);
+  assert.match(step2, /is a discrepancy/);
+  assert.match(step2, /Re-anchor it to the next real target, or close it/);
+});
+
+test("a defect in the workflow itself is filed upstream, not patched locally", () => {
+  assert.match(STANDARDS, /## Defects in the workflow itself/);
+  const upstream = STANDARDS.slice(STANDARDS.indexOf("## Defects in the workflow itself"), STANDARDS.indexOf("## Modifying files"));
+  assert.match(upstream, /filed upstream/);
+  assert.match(upstream, /does not survive an update/);
+});
+
 /* ---------------- observability is decided, not invented ---------------- */
 
 test("Phase 1 extracts the observability decisions, including a null answer", () => {

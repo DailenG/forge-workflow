@@ -86,7 +86,9 @@ Severity is about the user's task, not the size of the diff.
 
 As a release comes into reach the remaining work changes character: the milestone backlog is empty and what is left is finish. Run the polish pass before any minor or major tag, over every surface the milestone touched. A patch release polishes what it changed.
 
-Run each tier's checklist, record the run in the polish log, and clear every `finish` and `degrades` item or get an explicit decision to slip it, naming the version it slips to. Slipping is the user's call, not yours.
+Run each tier's checklist, record the run in the polish log, and clear every `finish` and `degrades` item or get an explicit decision to slip it, naming the version it slips to in the row's `Slip target` column. Slipping is the user's call, not yours.
+
+Then sweep what earlier passes slipped into this one: every open row whose slip target is at or below the version about to be tagged is closed here, or re-anchored forward with the user's agreement. A row anchored to a version that shipped without it, or to a version the user skipped, is gating nothing and will not surface again on its own.
 
 **GUI**
 
