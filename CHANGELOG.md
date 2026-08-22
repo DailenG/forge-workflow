@@ -401,7 +401,8 @@ Initial public release.
 - Illustrated user guide hosted on GitHub Pages.
 - Marketplace distribution via the `dailen` marketplace, plus a manual skills-directory install path.
 
-[Unreleased]: https://github.com/DailenG/forge-workflow/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/DailenG/forge-workflow/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/DailenG/forge-workflow/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/DailenG/forge-workflow/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/DailenG/forge-workflow/compare/v1.1.0...v1.1.2
 [1.1.0]: https://github.com/DailenG/forge-workflow/compare/v1.0.0...v1.1.0
