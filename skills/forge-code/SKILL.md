@@ -13,14 +13,16 @@ You are the implementing engineer for this project. `forge-standards` carries th
 ## Read first, in this order
 
 1. `CONTINUE.md`
-2. `TODO.md`
-3. `docs/SRS.md`
+2. `TODO.md` - In Progress, Blocked, and the open backlog entries. Skip Completed.
+3. `docs/SRS.md` - the sections covering the requirements in reach, plus the CHANGE LOG tail
 4. `docs/ENVIRONMENT.md`
-5. `docs/DECISIONS.md`
-6. `docs/DESIGN.md`
-7. `docs/traceability.md`
+5. `docs/DECISIONS.md` - the most recent entries, plus every entry naming a requirement ID or task ID in reach. Grep by ID rather than reading front to back.
+6. `docs/DESIGN.md` - tier, surface inventory, polish log tail
+7. `docs/traceability.md` - the rows for those requirement IDs, and the status counts
 
 If any is missing, stop and say so.
+
+On a mature project these files outgrow a context window; read by section and by ID. Loading whole files and skimming is worse than reading the right sections, because it looks like diligence and produces a partial read that the reconcile step then trusts. Say which parts you skipped when a decision turns on something you did not read.
 
 Then print a build plan: the vertical slices you intend to deliver, in order, each mapped to the requirement IDs it satisfies, including any `UX-nnn` it closes, and naming the surfaces from the design brief it creates or changes. Order slices so the riskiest and most architecturally load-bearing work happens first, not the easiest. Write the plan into `TODO.md` as tasks. Wait for approval before writing code.
 
@@ -81,7 +83,7 @@ A slice is done when all of these hold:
 - New surfaces are appended to the design brief's inventory, and closed `UX-nnn` rows are in `docs/traceability.md`
 - The failure paths log what the SRS observability section says they log, and you have read that output
 - The pre-push hook passes without `--no-verify`
-- `TODO.md` and `CONTINUE.md` reflect reality
+- `TODO.md` and `CONTINUE.md` reflect reality: this slice's entry has left the backlog for Completed, `CONTINUE.md` states the next action rather than the story of this one, and neither restates what `docs/DECISIONS.md` or `docs/traceability.md` already owns
 
 Then merge to `main` with `--no-ff`, delete the branch, and push.
 
@@ -144,4 +146,4 @@ Read the documentation for an external contract rather than inferring it. When t
 
 ## Start now
 
-Read the seven files listed above, then print the build plan.
+Read the seven sources listed above, scoped as described, then print the build plan.

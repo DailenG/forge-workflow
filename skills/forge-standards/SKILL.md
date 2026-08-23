@@ -16,6 +16,16 @@ If this machine lost power right now, `CONTINUE.md` plus git history must be eno
 - "Next action" is a concrete action. "Implement auth" is useless; "Add the token refresh branch to `AuthClient.refresh`; tests at `tests/auth_test.ts:88` currently fail" is useful.
 - Commit `CONTINUE.md` and `TODO.md` updates alongside the code they describe.
 
+## Record hygiene
+
+Every artifact here is append-oriented, so without a ceiling the record set grows until it no longer fits a session, and then the reconcile step runs on a partial read while still reporting confidence. Size is a defect, not evidence of rigor.
+
+- `CONTINUE.md` holds current state and the next action. Ceiling: 200 lines. The SessionStart hook injects it against a budget a file under the ceiling never reaches, so a capped injection means the file has taken on history. Over the ceiling, compacting it is part of the current slice.
+- A closed slice's narrative does not live in `CONTINUE.md`. Write it once where it belongs: reasoning in `docs/DECISIONS.md`, test evidence in `docs/traceability.md`, disposition in `TODO.md`. A "what T-042 shipped" section is deleted when the next slice opens, not accumulated.
+- **One fact, one owner.** `TODO.md` carries the disposition, `docs/DECISIONS.md` the reasoning, `docs/traceability.md` the test evidence, `docs/DESIGN.md` the surface, `CONTINUE.md` the next action. Cross-reference by ID; do not re-narrate. Restating one closure across four files is how the four come to disagree, and the disagreement is discovered by a reader who trusted whichever it read first.
+- **Correct by superseding, not by layering.** A record that is now wrong is rewritten in place and marked superseded, dated. Appending the correction below a claim that stays put leaves both readable, and the stale one reads first.
+- `TODO.md` Completed entries move to `docs/DONE-ARCHIVE.md` past 50 entries. A CLOSED item leaves the backlog in the same edit that closes it, so the backlog stays a list of work rather than a history of it.
+
 ## Flow and strict mode
 
 `CONTINUE.md` carries a `Mode:` field, defaulting to FLOW.
