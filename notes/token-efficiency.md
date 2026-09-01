@@ -406,3 +406,54 @@ layer built before Stage 1 would be an adapter for the wrong shape.
    latency question with numbers rather than inference.
 3. Stage 1, records as files with generated views.
 4. The OMP adapter, against the Stage 1 shape.
+
+### 8.7 Delivered 2026-09-01
+
+`token-efficiency` merged to `main` with `--no-ff`, 174 tests passing and
+`claude plugin validate --strict .` clean on the merge commit itself. Tagged
+`v1.4.0`, GitHub Release cut from the changelog section with the
+`scripts/package.js` artifact attached, 25 entries, 92,583 B. CI validate passed
+on `main`.
+
+The published `dailen` catalog resolves this plugin by `source: "url"` with no
+`ref`, so it tracks the default branch and the push was the delivery. The tag and
+release exist for the manual-install artifact, not for resolution.
+
+**Both scopes had to be updated.** `claude plugin update forge-workflow` defaults
+to user scope and reported success while `autotask-focus-bridge` stayed on
+`0.1.0`, because that project carries a second, project-scope install.
+`--scope project` run from the project directory moved it. Anyone chasing a
+version that will not advance should check for both entries in
+`installed_plugins.json` before suspecting the catalog.
+
+Smoke test, section 7 open item 1, run against the live project from the
+installed `1.4.0` cache path: **14,416 chars injected**, ladder fields present
+(`Phase: 3`, `Gate: PASSED`, `Mode: FLOW`), `## Blocked on me` present, withheld
+sections named with their sizes (`What T-115 shipped ... (1290 chars)`,
+`What T-114 shipped ... (1547 chars)`), and no retrospective section body
+injected. 171,141 to 14,416 chars, 11.9x, confirmed end to end.
+
+One observation for the project rather than the plugin: the section the selector
+injects under the name `Start here next session` is itself titled
+`[HISTORICAL, 2026-08-20 - superseded by the top section of this file]`. The
+selector is picking the right section name; the record has two answers under it.
+That is precisely the layering failure of section 2 and it is what the queued
+compaction slice is for.
+
+### 8.8 OMP discovery confirmed by observation
+
+Section 8.5 read this out of the OMP source. Now measured. Running
+`omp -p --no-session --model sonnet` inside `autotask-focus-bridge` and asking for
+the loaded skill list returns `forge`, `forge-design`, `forge-standards` and the
+rest of the forge set among 34 skills, alongside the other installed Claude
+plugins. OMP loads forge's skills out of `~/.claude/plugins/cache/` with no
+adapter, no configuration, and no marketplace entry of its own: `omp plugin list`
+reports an empty npm and marketplace registry while the skills are loaded, because
+`claude-plugins.ts` is a separate discovery provider from OMP's own plugin store.
+
+Worth knowing for anyone testing this: `--no-tools` also suppresses skills. The
+first run of this check returned "No skills or slash commands are available" and
+that was the flag, not discovery.
+
+The adapter plan therefore rests on observed behaviour. What remains missing is
+still exactly the two hooks named in section 8.5.
