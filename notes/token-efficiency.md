@@ -152,73 +152,29 @@ reasoning above does not depend on it, because the window-occupancy argument is
 independent of caching. It is measurable rather than researchable: see the test
 plan below.
 
-## 6. Stage 1, designed and not built
+## 6. Stage 1: measurements only
 
-Records as files, views generated, graph derived rather than authoritative. The
-precedent is `.codegraph/`: 35 MB, gitignored, rebuildable, authoritative about
-nothing.
+**The design moved out of this file.** It is specified in
+`notes/stage-1-records.md`: records as small addressable files, views generated,
+the graph derived rather than authoritative, and the three programs that
+maintain it. Restating it here would make this file assert the design twice,
+which is the failure mode section 2 documents.
 
-Rejected: a SQLite or graph store as the system of record. SRS approval is a human
-gate so the record must be reviewable in a PR; records must diff and merge in git
-and two agents already edit that repo concurrently; forge installs as prompt text
-plus node scripts. Also rejected: vector or semantic retrieval. Every fact already
-has a canonical key, so deterministic ID lookup dominates similarity search, and a
-stale embedding on a gated lifecycle is a correctness hazard.
+What stays here is what this file measured and the spec quotes.
 
-```
-docs/records/{decisions,requirements,tasks,uxd}/<id>.md   authoritative, small
-docs/views/{traceability,DONE-ARCHIVE,open-work}.md       GENERATED, never hand-edited
-.forge/index.json                                          GENERATED, gitignored
-CONTINUE.md                                                pointer file, IDs not prose
-```
+**Live-state index feasibility.** An index built from the real records carrying
+only live state (phase, gate, mode, 6 open tasks, 12 open UXD rows, the gap
+requirement IDs) came to **3,017 B / about 754 tokens**, against a `CONTINUE.md`
+of 118,767 B at the time: **39x**.
 
-Front matter carries the edges: `id`, `status`, `closes`, `satisfies`,
-`supersedes`, `decided_in`. The node and edge vocabulary already exists in the
-project as `T-nnn`, `FR-xxx-nnn`, `UX-nnn`, `UXD-nnn`, `OBS-nnn`, `REL-nnn`,
-`USA-nnn`, `PERF-nnn`, and the relations closes/satisfies/supersedes/covered-by.
-The graph is present and unindexed; what is missing is that each node has no
-address.
+**Edge inference from existing prose.** Of 215 decision entries measured
+2026-08-22, **92 percent already named a `T-id`, 72 percent named a requirement
+ID, 6 percent were orphans**, median 7 IDs per entry. Re-run against the grown
+set on 2026-09-01 in section 8.4.
 
-What it buys, in order of importance:
-
-1. **Write once instead of five times.** A slice close edits one task record and
-   appends one decision record; the views regenerate. This is the maintenance
-   burden, and retrieval cleverness does not fix it.
-2. **Supersession becomes resolvable.** History is preserved and the generated
-   working set shows only live records, so a file cannot assert two answers.
-3. **Deterministic retrieval.** One 2 KB record read instead of a grep across
-   1 MB.
-
-**Feasibility, measured rather than assumed.** A live-state index built from the
-real records (phase, gate, mode, 6 open tasks, 12 open UXD rows, 91 gap
-requirements) came to **3,017 B / ~754 tokens**, against `CONTINUE.md` at
-118,767 B: 39x. Edge inference from the existing prose is mechanical: of 215
-decision entries, **92 percent already name a `T-id`, 72 percent name a
-requirement ID, 6 percent are orphans**, median 7 IDs per entry. Migration is a
-one-time script plus human review of the orphans.
-
-**The trap.** An index enumerating all 317 requirements plus 138 tasks plus 61
-UXD rows is about 42 KB, which recreates the problem one level up. The index
-carries live state only; history stays addressable and is never enumerated.
-
-**Non-negotiable guard.** A PostToolUse hook must refuse hand-edits to
-`docs/views/**`. A generated file that anyone may edit becomes an unreliable
-hand-maintained file within a week, which is exactly how `traceability.md` became
-305 KB of prose with eight broken Status cells.
-
-**Needs three real programs** in `templates/`: indexer, view generator, and a
-records linter (IDs unique, every edge resolves, no dangling supersede, no
-orphan). Precedent exists: `branch-protection.js` and `history-guard.js` are real
-tested programs shipped in `templates/`.
-
-**Ship it as a versioned capability with a backfill offer**, using the mechanism
-`CLAUDE.md` already describes: an older project is not a broken project, the
-answer lands in the `Capabilities:` line, a recorded skip is honoured. Migration
-of an existing 2.3 MB record set is its own slice, taken with the working agent's
-consent, never mid-slice.
-
-Stage 2, an actual query layer, only if a question appears that IDs and grep
-cannot answer. Currently no evidence one exists.
+**The index trap.** An index enumerating all requirements plus tasks plus UXD
+rows is about 42 KB, which recreates the problem one level up. This is a
+measurement, and it is why the spec's index carries live state only.
 
 ## 7. Open items
 
@@ -260,10 +216,13 @@ editing `CONTINUE.md` or `TODO.md` mid-slice would collide.
   (`t090p1-demo-backup`, `cbx-demo-backup`, two named `.bak` databases, about
   2.4 MB, no documented cleanup).
 
-**Not yet decided for the plugin.** Whether `docs/DECISIONS.md` should be month
-partitioned (`docs/decisions/YYYY-MM.md` plus an index) as an interim step before
-full Stage 1. It bounds both the append cost and the `ascii-check.js` PostToolUse
-full-file re-read, which currently rescans the whole file on every edit to it.
+**Decided, 2026-09-01: no month partitioning.** This item asked whether
+`docs/DECISIONS.md` should be split into `docs/decisions/YYYY-MM.md` plus an index
+as an interim step before Stage 1, on the grounds that it bounds both the append
+cost and the `ascii-check.js` full-file re-read. **Both grounds are gone.** The
+re-read costs nothing measurable, per section 8.2: the hook is process startup
+either way. And Stage 1 is now specified in `notes/stage-1-records.md`, so an
+interim shape would be a migration to throw away. Superseded, not deferred.
 
 ---
 
