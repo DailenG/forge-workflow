@@ -78,14 +78,31 @@ const STATE_FIELD =
  * narrative is the exact cost this cap exists to remove.
  */
 const LIVE_SECTIONS = [
-  /^#+\s*(next action|start here)/i,
+  /^#+\s*(read this first|next action|start here)/i,
   /^#+\s*blocked/i,
   /^#+\s*in flight/i,
   /^#+\s*verify current state/i,
   /^#+\s*notes for the next session/i,
 ];
 
+/*
+ * A heading that says it is no longer current. The Record hygiene standard says
+ * to correct by superseding rather than by layering, and a project following it
+ * marks the superseded section in its own heading. Injecting such a section is
+ * worse than injecting nothing: the model reads a stale next action and acts on
+ * it while believing it is current.
+ *
+ * Found by running this against a real project through the omp bridge. The file
+ * carried both `## Start here next session [HISTORICAL, superseded by the top
+ * section of this file]` and a current `## READ THIS FIRST: where the work
+ * stopped`. The stale one matched a live pattern, the current one matched none,
+ * so the injection carried the stale next action and withheld the real one, and
+ * the model correctly reported that it had been handed superseded history.
+ */
+const SUPERSEDED_HEADING = /\b(historical|superseded|obsolete|out of date|no longer (current|accurate))\b/i;
+
 function isLive(heading) {
+  if (SUPERSEDED_HEADING.test(heading)) return false;
   return LIVE_SECTIONS.some((pattern) => pattern.test(heading));
 }
 
@@ -155,7 +172,10 @@ function withinBudget(doc) {
   const eligible = [];
   for (const pattern of LIVE_SECTIONS) {
     for (const section of rest) {
-      if (pattern.test(section.heading) && !eligible.includes(section)) {
+      // isLive, not the pattern alone: the pattern establishes priority order,
+      // and isLive additionally refuses a heading that says it is superseded.
+      // Testing the pattern directly here would have let a stale section in.
+      if (pattern.test(section.heading) && isLive(section.heading) && !eligible.includes(section)) {
         eligible.push(section);
       }
     }

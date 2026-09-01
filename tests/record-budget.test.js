@@ -274,3 +274,45 @@ test("the read lists are scoped, so a mature project's records stay readable", (
   assert.match(orchestrator, /name what you skipped/, "a partial read must be declared as one");
   assert.match(orchestrator, /The injection is capped/, "Step 1 must know the hook withholds");
 });
+
+test("a section whose heading says it is superseded is never injected", () => {
+  // Found against a real project through the omp bridge. The file carried both
+  // a stale `Start here next session [HISTORICAL, superseded by the top section
+  // of this file]` and a current `READ THIS FIRST`. The stale heading matched a
+  // live pattern and the current one matched none, so the injection carried the
+  // superseded next action and withheld the real one. Handing the model a stale
+  // next action it believes is current is worse than handing it nothing.
+  const root = projectWithContinue(
+    [
+      "Phase: 3",
+      "Gate:  PASSED",
+      "",
+      "## READ THIS FIRST: where the work stopped",
+      "",
+      "Ship the gateway retry slice. This is the real next action.",
+      "",
+      "## Start here next session [HISTORICAL, 2026-08-20 - superseded by the top section of this file]",
+      "",
+      "Do the thing that was already done.",
+      "",
+      // Over the budget, so selection actually runs. Under it the whole file is
+      // injected verbatim and there is nothing to choose between.
+      "## What T-900 shipped",
+      "",
+      "x".repeat(BUDGET),
+      "",
+    ].join("\n")
+  );
+  const body = injectedBody(sessionStart(root));
+  assert.match(body, /Ship the gateway retry slice/, "the current section must be injected");
+  assert.doesNotMatch(body, /Do the thing that was already done/, "the superseded one must not be");
+  bp.removeDisposable(root);
+});
+
+test("READ THIS FIRST is recognised as a live section name", () => {
+  const root = projectWithContinue(
+    ["Phase: 2", "", "## READ THIS FIRST: where the work stopped", "", "The next action lives here.", ""].join("\n")
+  );
+  assert.match(injectedBody(sessionStart(root)), /The next action lives here/);
+  bp.removeDisposable(root);
+});

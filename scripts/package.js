@@ -35,6 +35,8 @@ const PAYLOAD = [
   "scripts/stop-check.js",
   "scripts/views-guard.js",
   { dir: "skills", each: "SKILL.md" },
+  "harness/README.md",
+  "harness/omp/forge-bridge.ts",
   { dir: "templates" },
   "README.md",
   "LICENSE",

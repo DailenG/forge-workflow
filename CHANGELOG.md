@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-09-01
+
+### Fixed
+
+- The SessionStart hook no longer injects a section whose own heading says it is
+  superseded. Found by running forge through the new omp bridge against a real
+  project: that project's `CONTINUE.md` carried both a current
+  `## READ THIS FIRST: where the work stopped, 2026-09-01` and a stale
+  `## Start here next session [HISTORICAL, 2026-08-20 - superseded by the top
+  section of this file]`. The stale heading matched a live-section pattern and
+  the current one matched none, so the injection carried the superseded next
+  action and withheld the real one. The model said so unprompted, which is how
+  this was caught. Handing the model a stale next action it believes is current
+  is worse than handing it nothing, and the Record hygiene standard already tells
+  projects to mark a superseded section in its heading, so that marker is now
+  what the selector honours. `READ THIS FIRST` also joins the live-section names.
+  Two contributing defects are fixed with it: the eligibility loop tested the
+  priority pattern directly rather than going through `isLive`, so the guard
+  would have had no effect where it mattered most; and on the real file the
+  injection is now 10,791 chars rather than 14,416, because the 9,032 char stale
+  section is named in the withheld list instead of injected.
+
+### Added
+
+- `harness/omp/forge-bridge.ts`, an extension that closes the two gaps omp has
+  when running forge. omp already loads forge's skills, slash commands, rules,
+  MCP servers, and tool-level hooks straight out of `~/.claude/plugins/cache/`,
+  verified by observation; what it has no equivalent for is `SessionStart` and
+  `Stop`, because its hook capability models only `pre` and `post` tool hooks and
+  never reads `hooks.json`. The bridge subscribes to omp's own lifecycle events
+  and shells out to the same `session-start.js` and `stop-check.js` the Claude
+  Code hooks run, so there is one copy of that logic. It resolves the forge
+  install by reading `installed_plugins.json` rather than by listing the cache
+  directory, because the cache holds every version ever installed and a
+  project-scope entry shadows the user-scope one. It also locates node explicitly
+  rather than trusting `process.execPath`, which inside omp is omp's own compiled
+  binary: that mistake made the first working version inject nothing, silently.
+  `harness/README.md` records which forge components cross a harness boundary and
+  which do not.
+
 ## [1.5.0] - 2026-09-01
 
 ### Added
@@ -508,7 +548,8 @@ Initial public release.
 - Illustrated user guide hosted on GitHub Pages.
 - Marketplace distribution via the `dailen` marketplace, plus a manual skills-directory install path.
 
-[Unreleased]: https://github.com/DailenG/forge-workflow/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/DailenG/forge-workflow/compare/v1.5.1...HEAD
+[1.5.1]: https://github.com/DailenG/forge-workflow/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/DailenG/forge-workflow/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/DailenG/forge-workflow/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/DailenG/forge-workflow/compare/v1.2.0...v1.3.0

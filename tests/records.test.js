@@ -632,3 +632,37 @@ test("the migration reads a second table with its own column names", () => {
   assert.doesNotMatch(t1, /T-99/, "a task merely narrated in the Notes column is not an edge");
   bp.removeDisposable(root);
 });
+
+// ------------------------------------------------------- the omp bridge
+
+test("the omp bridge drives forge's own hook scripts rather than reimplementing them", () => {
+  // The whole point of the bridge is that there is one copy of the logic. If it
+  // ever grows its own idea of what to inject, the two harnesses drift and the
+  // Claude Code path is the one that gets tested.
+  const src = fs.readFileSync(path.join(REPO_ROOT, "harness", "omp", "forge-bridge.ts"), "utf8");
+  assert.match(src, /session-start\.js/);
+  assert.match(src, /stop-check\.js/);
+  assert.doesNotMatch(src, /CONTINUE\.md['"]\s*\)/, "the bridge must not read the record itself");
+});
+
+test("the omp bridge resolves forge from the registry, not from the cache listing", () => {
+  // The cache holds every version ever installed. Listing it and taking the
+  // highest resolved 1.4.0 on a machine whose project was pinned to 0.1.0.
+  const src = fs.readFileSync(path.join(REPO_ROOT, "harness", "omp", "forge-bridge.ts"), "utf8");
+  assert.match(src, /installed_plugins\.json/);
+  assert.match(src, /scope === "project"/, "a project-scope install shadows the user one");
+});
+
+test("the omp bridge subscribes to the events that stand in for the two missing hooks", () => {
+  const src = fs.readFileSync(path.join(REPO_ROOT, "harness", "omp", "forge-bridge.ts"), "utf8");
+  for (const ev of ["session_start", "before_agent_start", "agent_end"]) {
+    assert.ok(src.includes('pi.on("' + ev + '"'), "must handle " + ev);
+  }
+  assert.match(src, /willContinue/, "a scheduled continuation is not a settled turn");
+});
+
+test("the release payload carries the harness bridge", () => {
+  const pkg = fs.readFileSync(path.join(REPO_ROOT, "scripts", "package.js"), "utf8");
+  assert.match(pkg, /harness\/omp\/forge-bridge\.ts/);
+  assert.match(pkg, /harness\/README\.md/);
+});
