@@ -264,3 +264,145 @@ editing `CONTINUE.md` or `TODO.md` mid-slice would collide.
 partitioned (`docs/decisions/YYYY-MM.md` plus an index) as an interim step before
 full Stage 1. It bounds both the append cost and the `ascii-check.js` PostToolUse
 full-file re-read, which currently rescans the whole file on every edit to it.
+
+---
+
+## 8. Session of 2026-09-01: measurements, and the harness question
+
+### 8.1 Stage 0 is written and not delivered
+
+`token-efficiency` is two commits ahead of `main`. The plugin cache tops out at
+`1.3.0`, so `autotask-focus-bridge` is running the pre-fix forge. Open item 1 of
+section 7 never ran. In the ten days since section 1 was measured the record set
+grew again:
+
+| Artifact | 2026-08-22 | 2026-09-01 | Growth |
+|---|---|---|---|
+| `CONTINUE.md` | 118,767 B | 165,048 B | +39 percent |
+| `TODO.md` | 639,206 B | 702,687 B | +10 percent |
+| `docs/DECISIONS.md` | 1,031,625 B | 1,156,058 B | +12 percent |
+| `docs/traceability.md` | 304,738 B | 342,182 B | +12 percent |
+| `docs/SRS.md` | 166,689 B | 174,726 B | +5 percent |
+
+The SessionStart injection was measured directly against the live project, same
+payload, both scripts:
+
+| Script | Injected |
+|---|---|
+| installed `1.3.0` | 165,854 chars, about 41,000 tokens |
+| **resolved `0.1.0`, what the project actually gets** | **171,141 chars, about 42,800 tokens** |
+| this branch `1.4.0` | 14,503 chars, about 3,600 tokens |
+
+11.4x against 1.3.0, 11.8x against what is actually installed. Already written.
+
+**The install was not what it looked like.** The cache directory
+`~/.claude/plugins/cache/dailen/forge-workflow/` holds `0.1.0`, `1.1.2`, `1.2.0`,
+and `1.3.0`, and the highest present is the natural thing to assume is live. It is
+not. `~/.claude/plugins/installed_plugins.json` resolves `forge-workflow@dailen`,
+at both user and project scope, to the `0.1.0` directory, commit `47c9e42`, dated
+2026-07-27. That predates 1.0.0: the cached tree has five skills and no
+`forge-design`, so the project has never had the 1.2.0 design and polish
+discipline, the 1.3.0 backlog disposition work, or anything since. The stale
+resolution, not the record set alone, is why the injection measured worse than the
+newest cached version. Read `installed_plugins.json` rather than the cache
+listing when establishing which version a project is running. Every further bloat measurement taken before this merges
+is measuring a version that is already fixed.
+
+### 8.2 The per-turn hook tax is process startup, not file size
+
+Hypothesis under test: `ascii-check.js` re-reading the 1.15 MB `DECISIONS.md`
+synchronously on every edit is a latency cost. Measured, three runs against the
+1.15 MB file and one against a 2 KB file, same script, same machine:
+
+| Target | Wall clock |
+|---|---|
+| `DECISIONS.md`, 1,156,058 B | 254 ms, 247 ms, 312 ms |
+| `README.md`, 2,415 B | 388 ms |
+
+The small file was not faster. The cost is node process startup, roughly 250 to
+390 ms per hook invocation, and the 1.15 MB read plus seven regex passes
+disappears inside it. **This retires the read-cost argument for month
+partitioning `docs/DECISIONS.md`** that section 7 left open. Partitioning may
+still be justified on write-amplification or reviewability grounds, but not on
+this one. Total hook tax is under a second per turn and is not the source of a
+multi-minute wait.
+
+### 8.3 Where a multi-minute wait actually comes from
+
+Not the hooks. The candidates that survive, in order: prefill of the injected
+block plus `CLAUDE.md` plus the always-loaded skills (about 41,000 + 7,700 +
+8,500 tokens before a single file is read on `1.3.0`), mid-turn reads of
+multi-hundred-KB records, and model thinking time. Time to first token scales
+with prefill; decode throughput does not. Section 7's open items 1 and 2 are
+still the right test, and `omp bench` (TTFT and prefill vs decode, with a
+prompt-cache workload) separates "our injection is huge", which forge can fix,
+from "the model is slow", which it cannot.
+
+### 8.4 Stage 1 feasibility re-checked against the grown record set
+
+Section 6's edge-inference numbers were a month old against a record set that
+has since grown 12 percent. Re-run on 2026-09-01 over 243 decision entries:
+**91 percent name a `T-id`** (was 92), **69 percent name a requirement ID**
+(was 72), **7 percent orphans** (was 6), average 4,757 B per entry (was 4,888).
+The migration-script assumption holds.
+
+### 8.5 The harness question: OMP, and what is actually portable
+
+`omp` (Oh My Pi) v18.0.4 is installed at `~/.bun/bin/omp.exe`, config at
+`~/.omp/agent/config.yml`, default model role `anthropic/claude-opus-5`. It is a
+Rust and TypeScript terminal agent, a fork of Mario Zechner's Pi, MIT licensed.
+
+Read from the installed package,
+`~/.bun/install/global/node_modules/@oh-my-pi/pi-coding-agent/src`:
+
+- `src/discovery/` carries providers for `claude`, `claude-plugins`, `agents-md`,
+  `claude-md`, `codex`, `cline`, `cursor`, `gemini`, `opencode`, `windsurf`,
+  `vscode`, `github`. What crosses harness boundaries today is markdown skills,
+  `AGENTS.md`-style context files, and CLI-invokable programs.
+- `src/discovery/claude-plugins.ts` loads installed Claude Code marketplace
+  plugins **directly out of `~/.claude/plugins/cache/`**, at provider priority 70,
+  and maps skills, slash commands, rules, MCP servers, and hooks into its own
+  capability registry. Forge already lives at that path.
+- **The gap is precise.** `src/capability/hook.ts` models only `type: "pre" | "post"`
+  keyed to a tool, discovered from `hooks/pre/` and `hooks/post/` directories.
+  Nothing reads `hooks/hooks.json`, and there is no SessionStart or Stop
+  equivalent in that capability. Of forge's four hooks, `PreToolUse` and
+  `PostToolUse` have a home; `SessionStart` and `Stop` do not, and SessionStart is
+  the one that carries the record.
+- The shim is one OMP extension TS file subscribing to the lifecycle events in
+  `src/extensibility/extensions/types.ts` (`BeforeAgentStartEvent`, `SessionEvent`,
+  `ToolExecutionStartEvent`, `ToolExecutionEndEvent`; `ExtensionContext` at about
+  line 455) and shelling out to the four existing node scripts, translating the
+  payload. The scripts already read JSON on stdin, so this is an adapter and the
+  logic stays single-sourced. A working reference for the event subscriptions is
+  already on disk at `~/.omp/agent/extensions/herdr-omp-agent-state.ts`.
+
+**Manifest foot-gun, recorded before anyone edits it.**
+`src/discovery/agent-plugin-format.ts` implements Agent Plugins 1.0.0
+(`https://agent-plugins.org`). Adding that `$schema` to
+`.claude-plugin/plugin.json` flips the package to the `agent-plugins` provider and
+makes skills and MCP **exclusive** to it, locking out the legacy Claude provider;
+a fatal schema violation means none of the plugin's components load at all. The
+manifest schema is closed: `$schema`, `name`, `version`, `description`, `author`,
+`homepage`, `repository`, `license`, `keywords`, `extensions`. Forge's manifest
+currently carries `displayName`, which is not in that set. Unknown top-level
+fields are a non-fatal warning rather than a rejection, but the field would stop
+doing anything. Do not add the `$schema` without checking the whole manifest and
+testing both providers.
+
+**The load-bearing observation.** Making forge lean and making forge portable are
+the same work. What survives a harness change is markdown plus real programs;
+what does not is `hooks.json` and anything that assumes a specific injection
+mechanism. Stage 1 already moves enforcement into real programs on the
+`branch-protection.js` and `history-guard.js` precedent, and already reduces the
+record to small addressable files that any harness can read. A harness adapter
+layer built before Stage 1 would be an adapter for the wrong shape.
+
+### 8.6 Sequencing this implies
+
+1. Merge and release Stage 0, then confirm it in the live project. Until that
+   lands the 165 KB injection is a solved problem still being paid for daily.
+2. Run section 7's open items 1 and 2, plus `omp bench`, to close out the
+   latency question with numbers rather than inference.
+3. Stage 1, records as files with generated views.
+4. The OMP adapter, against the Stage 1 shape.
