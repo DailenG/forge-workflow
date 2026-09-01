@@ -22,6 +22,8 @@ You are the implementing engineer for this project. `forge-standards` carries th
 
 If any is missing, stop and say so.
 
+Under `records: backfilled` the record set is `docs/records/` and the read list changes: start from `.forge/index.json`, which carries the phase, the open tasks, the open UX debt, and the requirement gaps in about 3 KB, then read only the records whose IDs it names plus the ones they point at. Read `docs/views/open-work.md` in place of the backlog and `docs/views/traceability.md` in place of the traceability table. Rows 2, 5, and 7 above are then satisfied by those reads. If `node .forge/forge-index.js check` reports the index stale, rebuild it before trusting it.
+
 On a mature project these files outgrow a context window; read by section and by ID. Loading whole files and skimming is worse than reading the right sections, because it looks like diligence and produces a partial read that the reconcile step then trusts. Say which parts you skipped when a decision turns on something you did not read.
 
 Then print a build plan: the vertical slices you intend to deliver, in order, each mapped to the requirement IDs it satisfies, including any `UX-nnn` it closes, and naming the surfaces from the design brief it creates or changes. Order slices so the riskiest and most architecturally load-bearing work happens first, not the easiest. Write the plan into `TODO.md` as tasks. Wait for approval before writing code.
@@ -84,6 +86,7 @@ A slice is done when all of these hold:
 - The failure paths log what the SRS observability section says they log, and you have read that output
 - The pre-push hook passes without `--no-verify`
 - `TODO.md` and `CONTINUE.md` reflect reality: this slice's entry has left the backlog for Completed, `CONTINUE.md` states the next action rather than the story of this one, and neither restates what `docs/DECISIONS.md` or `docs/traceability.md` already owns
+- Under `records: backfilled` that closure is two edits, not five: set the task record's `status` and its `satisfies`, and add one decision record carrying the reasoning with `decided_in` naming the task. Then `node .forge/forge-records-lint.js`, `node .forge/forge-index.js build`, `node .forge/forge-views.js render`, and commit the records with the regenerated views. The views are generated, so writing the closure into them by hand is denied by a hook rather than merely discouraged
 
 Then merge to `main` with `--no-ff`, delete the branch, and push.
 

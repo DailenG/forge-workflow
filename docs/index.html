@@ -276,7 +276,7 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
       <div><span>Audience</span><b>Technical, not a developer</b></div>
       <div><span>Runs in</span><b>Claude Code</b></div>
       <div><span>Reading time</span><b>About 20 minutes</b></div>
-      <div><span>Edition</span><b>v1.4.0 &nbsp;/&nbsp; for Claude 5</b></div>
+      <div><span>Edition</span><b>v1.5.0 &nbsp;/&nbsp; for Claude 5</b></div>
     </div>
   </div>
 </header>
@@ -311,36 +311,41 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
 <main>
 
 <div class="note go">
-  <h4>New in v1.4.0 &nbsp;/&nbsp; the project's notes stay readable as the project grows</h4>
+  <h4>New in v1.5.0 &nbsp;/&nbsp; one note per fact, and the summaries write themselves</h4>
   <p>
-    Forge keeps a running record of your project: what is being worked on now, what was
-    decided and why, which tests prove which requirement. On a long project those notes kept
-    growing, and nothing ever told Forge to tidy them. On one real project the "where we are
-    now" file reached a hundred and ten thousand characters, most of it the story of work
-    already finished, and every single session began by reading all of it.
+    v1.4.0 put a size limit on the "where we are now" file. This release fixes the reason it
+    grew. Until now, finishing one piece of work meant writing the same news into four or five
+    different files by hand: the to-do list, the decisions file, the test map, the design
+    notes. Nothing said which file owned which fact, so over time they drifted apart and
+    disagreed, and the one you happened to read first was the one you believed. On one real
+    project a single fixed bug had been written up seventeen times across three files.
   </p>
   <p>
-    That file now has a size limit, and Forge is handed its opening rather than the whole
-    thing when it runs long, with a plain note saying so. Finished work moves out of the
-    active list instead of piling up in it. A note that turns out to be wrong gets rewritten
-    rather than corrected underneath, so the old wrong answer cannot be the first thing read.
-    And each fact has one home: what happened lives in the decisions file, the proof lives in
-    the test map, and the "where we are now" file says only what to do next.
+    Forge can now keep each note in its own small file, named after the thing it is about, and
+    <em>generate</em> the summaries from them: the test map, the list of open work, the archive
+    of finished work. You never edit a generated summary, and Forge will not let you: it stops
+    the edit and points you at the note to change instead. Change the note, and every summary
+    that mentions it updates itself.
   </p>
   <p>
-    What you should notice: sessions start faster, Forge spends its attention on your code
-    instead of on its own paperwork, and it stops telling you two different things about the
-    same decision.
+    That also settles which answer is current. When a decision replaces an earlier one, the
+    earlier one is marked as replaced and drops out of every summary, while staying on file if
+    you ever want to look it up. No more reading a stale answer at the top of a long file and
+    a corrected one further down.
+  </p>
+  <p>
+    What you should notice: finishing a piece of work takes fewer steps and produces fewer
+    contradictions, the summaries are always current because nobody maintains them, and asking
+    "what is left to do" reads a short generated list instead of a very long history. Before
+    anything is pushed, Forge checks that every note still points at something real.
   </p>
   <p>
     <strong>Already have a project on an older Forge?</strong> Nothing breaks and nothing is
-    treated as damaged. Forge notices what is missing, says what adding it now would cost, and
-    asks you once. See <a href="#away">walking away and coming back</a>.
-  </p>
-  <p>
-    On an older Claude 4 era model? There is a separate edition for you: see
-    <a href="#edition">which edition</a> below.
-  </p>
+    treated as damaged. Your project keeps its current files until you say otherwise. Forge
+    offers the change once, explains what it costs, and takes "not now" or "no" for an answer.
+    Moving an existing project over is done as its own separate piece of work, never in the
+    middle of something else, and it never deletes your old files: it moves them aside.
+    See <a href="#away">walking away and coming back</a>.
 </div>
 
 <!-- 01 -->
@@ -539,7 +544,7 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
       <tbody>
         <tr>
           <td><strong>A current Claude model</strong><br>Claude 5 era. This is almost certainly you.</td>
-          <td><code>forge-workflow</code><br>v1.4.0</td>
+          <td><code>forge-workflow</code><br>v1.5.0</td>
           <td><code>/forge</code></td>
         </tr>
         <tr>
@@ -1284,7 +1289,7 @@ C:\Users\&lt;you&gt;\.claude\skills\forge-workflow\
 </div>
 
 <footer>
-  <div class="sheet">FORGE &nbsp;/&nbsp; GUIDE FOR NON-DEVELOPERS &nbsp;/&nbsp; REVISED FOR v1.4.0</div>
+  <div class="sheet">FORGE &nbsp;/&nbsp; GUIDE FOR NON-DEVELOPERS &nbsp;/&nbsp; REVISED FOR v1.5.0</div>
 </footer>
 
 </div>

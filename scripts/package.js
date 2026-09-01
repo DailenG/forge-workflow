@@ -33,6 +33,7 @@ const PAYLOAD = [
   "scripts/session-start.js",
   "scripts/shell-write-guard.js",
   "scripts/stop-check.js",
+  "scripts/views-guard.js",
   { dir: "skills", each: "SKILL.md" },
   { dir: "templates" },
   "README.md",

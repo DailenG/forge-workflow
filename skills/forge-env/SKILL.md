@@ -88,7 +88,7 @@ Only after the toolchain smoke test passes:
 
 - Create the project directory if needed and run `git init`
 - Configure `user.name` and `user.email` if unset. Ask for the values
-- Write `.gitignore` **before the first commit**, covering the stack, IDE files, OS files, build output, `.env`, coverage output, and `.codegraph/`. A secret committed once lives in history forever, so this ordering is not negotiable. Do not ignore `.forge/`: the protection guard has to be committed, or a fresh clone has no guard
+- Write `.gitignore` **before the first commit**, covering the stack, IDE files, OS files, build output, `.env`, coverage output, and `.codegraph/`. A secret committed once lives in history forever, so this ordering is not negotiable. Do not ignore `.forge/`: the guards and the record programs have to be committed, or a fresh clone has neither. Ignore `.forge/index.json` specifically, since it is generated and rebuildable
 - Write `.gitattributes` with sane line ending handling
 - Create the directory skeleton the SRS implies, including the test directory layout
 - Do not scaffold application code; that is Phase 3
@@ -308,6 +308,14 @@ Write `docs/ENVIRONMENT.md`:
 Append version choices to `docs/DECISIONS.md`.
 
 ## Gate
+
+### Step 12a: Structured records
+
+New projects start on the record set forge intends, rather than migrating onto it later. Copy `templates/forge-records-lib.js`, `templates/forge-index.js`, `templates/forge-views.js`, `templates/forge-records-lint.js`, and `templates/forge-records-migrate.js` into `.forge/`, create `docs/records/{decisions,tasks,requirements,uxd}/` and `docs/records/VOCABULARY.md` seeded with the ID prefixes the SRS actually uses, and commit them. The migration program ships alongside them because an existing project reaching this capability through backfill needs it; a new project never runs it.
+
+Record `records: backfilled` in the `Capabilities:` line of `CONTINUE.md`.
+
+The pre-push hook gains the two record gates from `templates/lefthook.yml`, `05_records` and `06_views`. Both pass `--if-present`, so they stay inert until `docs/records/` exists rather than blocking a project that has not reached this step.
 
 Stop once the toolchain smoke test passes in both directions, the remote repo exists with an initial commit pushed, the pre-push hook is proven to block, **default-branch history protection is verified at either tier** (`node .forge/branch-protection.js gate` exits 0), CI is green, CodeGraph is verified, the tooling each `UX-nnn` verification method needs is installed and proven or its absence is recorded with the fallback method, and the state files are committed.
 

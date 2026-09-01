@@ -53,6 +53,22 @@ pre-push:
       run: <test command>
       fail_text: "Tests failed. Do not weaken tests to get past this."
 
+    # Record set integrity, when the `records` capability is backfilled. A
+    # dangling edge, a duplicate ID, or a fork in supersession makes the record
+    # set untrustworthy, and an untrustworthy record set is worse than the
+    # monolith it replaced: that at least contained the answer somewhere.
+    #
+    # --if-present makes both commands exit 0 on a project that has no
+    # docs/records/, so a skipped or not-yet-backfilled capability leaves an
+    # inert gate rather than a failing one.
+    05_records:
+      run: node .forge/forge-records-lint.js --if-present
+      fail_text: "The record set has unresolved edges. Fix the records, do not bypass."
+
+    06_views:
+      run: node .forge/forge-views.js check --if-present
+      fail_text: "docs/views/ is stale or hand-edited. Run: node .forge/forge-views.js render"
+
 # Optional: keep commits cheap and fast, put only formatting here.
 pre-commit:
   parallel: true

@@ -26,6 +26,29 @@ Every artifact here is append-oriented, so without a ceiling the record set grow
 - **Correct by superseding, not by layering.** A record that is now wrong is rewritten in place and marked superseded, dated. Appending the correction below a claim that stays put leaves both readable, and the stale one reads first.
 - `TODO.md` Completed entries move to `docs/DONE-ARCHIVE.md` past 50 entries. A CLOSED item leaves the backlog in the same edit that closes it, so the backlog stays a list of work rather than a history of it.
 
+The three rules above that name a specific file apply while the record set is monolithic. Under `records: backfilled` the same intent is enforced mechanically and those files no longer exist in that shape, so read the next section instead. `CONTINUE.md`'s ceiling holds either way.
+
+## Structured records
+
+A capability, recorded in the `Capabilities:` line as `records`. Under `skipped` or an unanswered offer, everything here is inert and Record hygiene above is the whole discipline. Do not re-litigate a recorded skip.
+
+Under `backfilled`, `docs/records/` is the system of record and the monoliths are gone:
+
+| Path | Authority |
+|---|---|
+| `docs/records/{decisions,tasks,requirements,uxd}/<id>.md` | Authoritative. One record, one file, one ID |
+| `docs/records/VOCABULARY.md` | Authoritative. Declares every legal ID prefix |
+| `docs/views/**` | **Generated. Never hand-edited.** A PreToolUse hook denies the write |
+| `.forge/index.json` | Generated, gitignored, rebuildable. Authoritative about nothing |
+
+- **Write the fact once, in the record that owns it, then regenerate.** A slice close edits its task record and adds one decision record. It does not restate the closure in four files, because the views derive it. This is the whole point: on the project that motivated this, one closed defect was narrated seventeen times across three files.
+- **Supersession is the answer to "which is live now".** Set `supersedes` on the new record. `node .forge/forge-records-lint.js --fix` writes the reverse edge and the superseded record leaves every view. Never edit a superseded record's body to correct it.
+- **Never invent an edge.** A missing edge surfaces as an orphan warning; a wrong one surfaces as nothing at all.
+- After editing records: `node .forge/forge-records-lint.js`, then `node .forge/forge-index.js build`, then `node .forge/forge-views.js render`. Commit the records and the regenerated views together, or the next reader sees a view that disagrees with its own source.
+- The linter and the view check run in the pre-push hook. A dangling edge, a duplicate ID, or a fork in supersession blocks the push. Fix the records; never bypass.
+
+Migration onto this shape is `node .forge/forge-records-migrate.js` and is **always its own slice**, taken with the user's consent, never mid-slice. It refuses a dirty working tree, moves the originals to `docs/archive/pre-records/` rather than deleting them, and reports the decision entries it could not connect to anything for a human to resolve.
+
 ## Flow and strict mode
 
 `CONTINUE.md` carries a `Mode:` field, defaulting to FLOW.

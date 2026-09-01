@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-01
+
+### Added
+
+- **Structured records, as a capability.** v1.4.0 capped what the SessionStart
+  hook injects. It did nothing about what gets written, which is where the growth
+  came from: closing one slice required writing the same fact by hand into four or
+  five artifacts with no owner assigned per fact, so the artifacts drifted and
+  disagreed. On the project this was measured against, one closed defect had been
+  narrated seventeen times across three files, and a 1 MB append-only decisions
+  file could not answer which of two contradicting entries was current, because
+  both were still in it with the stale one first. Under `records: backfilled`,
+  `docs/records/{decisions,tasks,requirements,uxd}/<id>.md` becomes the system of
+  record: one record, one file, one ID, with the edges in a closed front matter
+  field set. `docs/views/` is generated from it, `.forge/index.json` is a
+  gitignored live-state cache, and `CONTINUE.md` becomes a pointer file. A slice
+  close is then two edits and a regenerate rather than five hand-written
+  restatements. Ships through the existing backfill mechanism with a new Step 2a
+  row: a missing `docs/records/` is not a record-versus-reality discrepancy, a
+  recorded skip makes the whole capability inert, and migration is always its own
+  slice.
+- **Five programs in `templates/`**, on the `branch-protection.js` precedent of
+  real tested programs that run in the user's project rather than in the model's
+  context. `forge-index.js` builds the live-state index, which measured 3,017 B
+  against a `CONTINUE.md` of 118,767 B on the real project. `forge-views.js`
+  renders the traceability, open-work, and done-archive views deterministically,
+  so `check` is a byte comparison. `forge-records-lint.js` validates the closed
+  field set, unique IDs, resolvable edges, and acyclic non-forking supersession.
+  `forge-records-migrate.js` splits an existing monolithic record set, and
+  `forge-records-lib.js` is the shared parser. The linter and the view check join
+  the pre-push hook in `templates/lefthook.yml`; both take `--if-present`, so a
+  project without the capability has an inert gate rather than a failing one.
+- **`scripts/views-guard.js`**, a PreToolUse hook on `Write|Edit` that **denies** a
+  write under `docs/views/`. A generated file anyone may edit becomes an
+  unreliable hand-maintained file within a week: the hand-maintained traceability
+  table this replaces reached 342 KB with eight rows whose Status column held
+  narrative prose, and had its column boundaries destroyed once and rebuilt cell
+  by cell. This is PreToolUse rather than PostToolUse because PostToolUse fires
+  after the write has landed and can only report, which is exactly what let that
+  file rot. The deny is expressed as a `permissionDecision`, and the hook exits 0
+  on every path, because a guard that crashes and blocks every edit in the project
+  is worse than the rot it prevents.
+
+### Changed
+
+- The ID vocabulary is declared by the project in `docs/records/VOCABULARY.md`
+  rather than hardcoded. Enumerated against a real project, the actual vocabulary
+  is 34 prefixes rather than the 8 the design first assumed, because requirement
+  IDs carry a per-domain subcode a plugin cannot know in advance. An undeclared
+  prefix is a warning rather than a failure: a bare ID regex also matches
+  `SHA-256`, and a linter that is unusable on day one gets switched off.
+- `forge-standards` Record hygiene now says which of its rules apply only while
+  the record set is monolithic, so the `TODO.md` archive rule and the generated
+  `DONE-ARCHIVE.md` view cannot both be in force and contradict each other.
+- `forge-code` reads `.forge/index.json` and the generated views in place of the
+  backlog and the traceability table when the capability is backfilled, and its
+  closure checklist states the two-edit form.
+
 ## [1.4.0] - 2026-09-01
 
 ### Fixed
@@ -450,7 +508,8 @@ Initial public release.
 - Illustrated user guide hosted on GitHub Pages.
 - Marketplace distribution via the `dailen` marketplace, plus a manual skills-directory install path.
 
-[Unreleased]: https://github.com/DailenG/forge-workflow/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/DailenG/forge-workflow/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/DailenG/forge-workflow/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/DailenG/forge-workflow/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/DailenG/forge-workflow/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/DailenG/forge-workflow/compare/v1.1.2...v1.2.0

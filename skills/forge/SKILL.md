@@ -90,6 +90,7 @@ Check for these, cheaply, from what you already read:
 | Observability decisions | `docs/SRS.md` has no observability section, or it says nothing testable | Extract the decisions per `forge-spec` "Observability, in detail", amend the SRS, and file the wiring as a slice if the code does not already do it |
 | Surface verification tooling | `docs/ENVIRONMENT.md` records none, and a `UX-` requirement needs it | `forge-env` Step 11a, for the tiers in play |
 | External design tools | a GUI tier, and `docs/DECISIONS.md` records no choice about them | Offer the list from `forge-design` "External design tools" once, take "none" as an answer, and record it. Nothing installs without the user asking, and nothing is uploaded to a hosted service without a gate |
+| Structured records | no `docs/records/` directory | `forge-standards` "Structured records", as its own slice. Migration rewrites every artifact the lifecycle reads, so it never runs mid-slice |
 
 Raise the whole set once, in one message, ordered by what it would change about the work in front of you. For each: what it is, what backfilling costs now, and what shipping without it means. Then offer three answers, and say which you recommend:
 

@@ -1,14 +1,17 @@
 # Stage 1: records as files, views generated
 
 Design specification. Written 2026-09-01. This is an engineering record, not user
-documentation and not yet an implementation.
+documentation.
 
 `notes/token-efficiency.md` owns the measurements that motivate this work and the
 Stage 0 delivery log. This file owns the design. Where the two touch, the
 measurement is quoted here and lives there.
 
-**Status: specified, not built.** Nothing in this document ships until it is
-taken as a slice under the capability backfill mechanism described in section 10.
+**Status: built and shipped in v1.5.0.** Sections 1 through 11 are the design as
+specified. **Section 12 records what building it against the real data corrected,
+and where the two disagree section 12 is what the programs do.** No project is
+migrated onto this until it is taken as a slice under the capability backfill
+mechanism in section 10.
 
 ---
 
@@ -447,3 +450,75 @@ on resume because of it.
 - It does not remove a human gate anywhere. SRS approval, amendment and slip
   remain always-strict gates, and moving requirements into files does not make
   them cheaper to change.
+
+---
+
+## 12. Built, 2026-09-01, and what the real data corrected
+
+Shipped in v1.5.0. Five programs in `templates/` (`forge-records-lib.js`,
+`forge-index.js`, `forge-views.js`, `forge-records-lint.js`,
+`forge-records-migrate.js`), `scripts/views-guard.js`, a second PreToolUse
+matcher in `hooks/hooks.json`, two pre-push commands in `templates/lefthook.yml`,
+the Step 2a row, and 39 tests in `tests/records.test.js`.
+
+The spec above was written from measurements taken over the record set. Running
+the migration against a copy of the real 2.4 MB project corrected four things
+that reading the same files had not shown. All four are now in the programs and
+in their tests.
+
+**1. Task IDs carry a lowercase suffix.** `T-006a`, `T-006b`, `T-007e`. Real
+projects split a task as the work turns out to have parts, and **845 ID
+occurrences** in that project carry such a suffix. The ID shape in section 3 did
+not admit them, so the first run classified every decision naming a split task as
+an orphan: 23 orphans instead of 18, and 134 task records instead of 174. A shape
+that rejects a real ID does not fail loudly; it silently drops every edge naming
+it.
+
+**2. Column position must come from the header, and from each header.** The
+traceability parser first took the Status column as second from last. Against the
+real 342 KB table that is the Notes column, which is always prose, so it declared
+**321 of 321 rows unparseable, recovered one edge, and reported that as a
+successful run**. Reading the header fixed that. Then a second table below the
+first, a manual verification log with `Result` where the first has `Status`, was
+read with the first table's column names because the header was latched rather
+than re-read: every one of its rows fell through counted as neither parsed nor
+skipped. The parser now re-reads the header at each one, accepts an ID cell
+naming several requirements (`FR-MTL-003, FR-MTL-004`), and counts what it did
+not understand so a clean report cannot cover rows nobody looked at.
+
+**3. A migration must not hand back a record set that fails its own gate.** The
+monolith names IDs that no longer have anywhere to live: a task split into
+`T-007b` whose parent heading is the only one left in `TODO.md`, or a prefix that
+was always prose. The first complete run produced **52 dangling edges**, so the
+migrated project could not have pushed on day one. Silently dropping them would
+lose the reference. The migration now runs a resolution pass: an edge whose
+target no record carries leaves the front matter and is written into that
+record's own body under `## Edges the migration could not resolve`. The graph is
+sound, nothing is lost, and a human can reconnect it.
+
+**4. Section 2's claim about prose in the Status column no longer holds.** The
+earlier measurement found eight rows whose Status column held narrative. Against
+the current file the parser finds **zero**: the 339 rows are `COVERED`, `PARTIAL`,
+`WITHDRAWN`, `NONE`, `MANUAL`. The prose cells that measurement saw are in the
+second table's Evidence column. The detector works; the data changed.
+
+**End to end on the real 2.4 MB record set**, migration then strict lint then
+index then views:
+
+| | |
+|---|---|
+| Records written | 779 (243 decisions, 174 tasks, 339 requirements, 23 UX debt) |
+| `forge-records-lint.js`, no `--warn-only` | **exit 0**, 27 warnings, 0 errors |
+| `.forge/index.json` | **2,118 B** |
+| `docs/views/open-work.md` | 3,391 B |
+| `docs/views/check` after `render` | current, deterministic |
+| Against the live `CONTINUE.md` at 170,427 B | **80x** |
+
+The index came in smaller than the 3,017 B section 5 predicted. The 27 warnings
+are the 18 orphan decisions and the undeclared prefixes, which is exactly the
+list section 9 says a human reviews after a migration.
+
+Not done, and deliberately: the migration has not been run against
+`autotask-focus-bridge` itself. It is that project's own slice, taken with its
+agent's consent. Everything above was measured against a copy in a scratch
+directory; nothing in that repository was modified.
