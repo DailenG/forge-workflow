@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.2] - 2026-09-01
+
+### Changed
+
+- `templates/lefthook.yml` now explains how to scope a pre-push gate to the files
+  that can affect it, and why two of them must never be scoped. Every gate ran on
+  every push, so a documentation-only push rebuilt the solution, reran the suite,
+  remeasured coverage and recaptured GUI screenshots that no change could have
+  altered. Measured on a real project over 736 commits: 40 percent touch no code
+  or build configuration, and 55 percent touch no GUI surface. lefthook filters
+  `{push_files}` by a command's `glob` and skips the command outright when nothing
+  matches, so this is a trigger change rather than a weakening of a check. Two
+  rules are stated as non-negotiable, both because getting them wrong is silent:
+  the glob must include build configuration and not only sources, since a project
+  file or an SDK pin can break the build while touching no source file; and the
+  secret scan and history guard are never scoped, since a secret can be pasted
+  into a markdown file as easily as into source and the history guard inspects the
+  ref update rather than any file. This is guidance in the template a project
+  copies, not a behaviour change in the plugin.
+
 ## [1.5.1] - 2026-09-01
 
 ### Fixed
@@ -548,7 +568,8 @@ Initial public release.
 - Illustrated user guide hosted on GitHub Pages.
 - Marketplace distribution via the `dailen` marketplace, plus a manual skills-directory install path.
 
-[Unreleased]: https://github.com/DailenG/forge-workflow/compare/v1.5.1...HEAD
+[Unreleased]: https://github.com/DailenG/forge-workflow/compare/v1.5.2...HEAD
+[1.5.2]: https://github.com/DailenG/forge-workflow/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/DailenG/forge-workflow/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/DailenG/forge-workflow/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/DailenG/forge-workflow/compare/v1.3.0...v1.4.0

@@ -8,6 +8,38 @@
 # --no-verify is prohibited by project standards. If this blocks you, fix what
 # it caught, or report that it is blocking and why.
 
+# SCOPING A GATE TO WHAT CAN AFFECT IT. lefthook filters {push_files} by a
+# command's `glob` and SKIPS the command outright when nothing matches, so a
+# glob is a trigger change rather than a weakening of a check. Measured on a
+# real project over 736 commits: 40 percent touched no code or build config and
+# 55 percent touched no GUI surface, so a docs-only push was rebuilding,
+# retesting and recapturing screenshots that no change could have altered.
+#
+# Add a glob to the build, test, coverage and any surface-capture command:
+#
+#     03_build:
+#       glob:
+#         - "src/**"
+#         - "tests/**"
+#         - "*.sln"          # and the build configuration, see below
+#       run: <build command>
+#
+# TWO RULES THAT ARE NOT NEGOTIABLE.
+#
+#   1. The glob MUST include build configuration, not just sources. A change to
+#      a project file, a lockfile, a global SDK pin or a props file can break
+#      the build while touching no source file, and a glob listing only sources
+#      skips the build on exactly that push. Include whatever your toolchain
+#      reads: manifests, lockfiles, SDK pins, solution files.
+#
+#   2. NEVER scope the secret scan or the history guard. A secret can be pasted
+#      into a markdown file as easily as into source, so scoping the scan is how
+#      a leaked credential ships in a docs commit. The history guard inspects the
+#      ref update itself rather than any file.
+#
+# Scope only where an out-of-glob change genuinely cannot affect the answer. A
+# false skip ships a defect, so when in doubt leave the gate unscoped.
+
 pre-push:
   parallel: false
   # piped stops the sequence at the first failure. Without it the build and
