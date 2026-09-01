@@ -416,3 +416,109 @@ that was the flag, not discovery.
 
 The adapter plan therefore rests on observed behaviour. What remains missing is
 still exactly the two hooks named in section 8.5.
+
+---
+
+## 9. The latency question, answered from the transcripts
+
+Section 7 open item 2 asked for a `/cost` reading. The session transcripts under
+`~/.claude/projects/<project>/*.jsonl` carry per-request `usage` blocks, which is
+the same accounting over 14,028 requests and 436 human turns rather than over one
+session. Measured 2026-09-01 across every session that project has ever had,
+2026-08-03 to 2026-08-19.
+
+**Everything below is baseline.** That project ran forge `0.1.0` until this
+session. No transcript on disk contains a single request under 1.4.0 or 1.5.0.
+
+### 9.1 The wait is real, and it is almost exactly what was reported
+
+| Human turn, message sent to reply finished | |
+|---|---|
+| median | **269 s, 4.5 min** |
+| p75 | 1,190 s, 19.8 min |
+| p90 | 2,475 s, 41.2 min |
+| p99 | 5,441 s, 90.7 min |
+| over 5 minutes | **47.8 percent of turns** |
+| over 10 minutes | 34.8 percent |
+
+The report that a question might mean a five minute break was not an impression.
+The median is 4.5 minutes.
+
+### 9.2 It is not prefill, and section 8.3 was wrong to expect it would be
+
+Section 8.3 named prefill as the surviving candidate on the reasoning that time
+to first token scales with it. Measured against 10,801 paired samples, it barely
+does:
+
+| Prefill band | n | median turnaround | p90 |
+|---|---|---|---|
+| 0k to 100k | 287 | 3.9 s | 17.5 s |
+| 100k to 200k | 1,674 | 4.1 s | 15.1 s |
+| 200k to 400k | 3,981 | 4.5 s | 12.7 s |
+| 400k to 600k | 3,113 | 5.1 s | 12.8 s |
+| 600k to 1000k | 1,737 | 5.7 s | 14.1 s |
+
+A 6x increase in prefill costs 1.5x in turnaround, and the turnarounds over 60
+seconds have a **lower** median prefill (255,096) than the corpus as a whole
+(374,196). Cached prefix is cheap in latency as well as in price: 99.2 percent of
+cached input across the corpus was read rather than written.
+
+**So retiring the 171 KB injection was right for window occupancy and for
+correctness, and it is not the fix for waiting.** Recorded here because the
+opposite is the intuitive conclusion and this file previously implied it.
+
+### 9.3 What it actually is: turn depth, then tool execution
+
+| Turns over 5 minutes | median |
+|---|---|
+| wall clock | 1,322 s |
+| model requests | **39** |
+| tool calls | **42** |
+| output tokens generated | **25,739** |
+| wall clock per request | 33.9 s |
+
+Against a median model turnaround of 4.8 s, most of that 33.9 s is not the model.
+Splitting the measured wait directly, by timing tool_use to its result and tool
+result to the next assistant message:
+
+| | total | median | p90 |
+|---|---|---|---|
+| Model generating | 21.8 h | 4.8 s | 13.1 s |
+| Tools executing | 46.8 h | 1.5 s | 14.5 s |
+
+**Tools 68.3 percent, model 31.7 percent.** Of the tool half, one tool dominates:
+
+| Tool | calls | median | p90 | total |
+|---|---|---|---|---|
+| `Bash` | 4,890 | 2.4 s | 32.6 s | **22.6 h** |
+| `AskUserQuestion` | 105 | 112.0 s | 1030.8 s | 10.4 h |
+| `PowerShell` | 1,536 | 4.8 s | 20.0 s | 10.2 h |
+| `Agent` | 32 | 89.2 s | 305.2 s | 1.3 h |
+| `Edit` | 2,341 | 1.0 s | 2.4 s | 1.2 h |
+
+`AskUserQuestion` is the human thinking and is not a cost forge imposes; excluded,
+the split is tools 62.6 percent to model 37.4 percent. `Bash` and `PowerShell`
+together are 32.8 hours, and on this project that is overwhelmingly build and
+test: section 3 recorded 794 `.trx` files, about 50 test runs a day.
+
+### 9.4 What this means for forge
+
+The lever is not the size of what forge reads. It is **how many round trips and
+how much generated text one instruction costs**.
+
+- Stage 0 cut the read side: seven whole documents became scoped reads.
+- Stage 1 cuts the write side: a slice close was five hand-written restatements
+  across five files and is now two record edits and a regenerate. On the measured
+  corpus `Edit` alone was 2,341 calls.
+- The single largest remaining term is the project's own test suite, at 22.6
+  hours of `Bash`. That is a project-side fix (run the affected tests during a
+  slice, the full suite at the gate), not a plugin fix, and it belongs in that
+  project's backlog rather than here.
+
+### 9.5 `omp bench` is not worth running
+
+Section 8.3 proposed it to separate "our injection is huge" from "the model is
+slow". Both halves are now answered from real traffic on the real project: the
+injection is not the cause, and the model is 31.7 percent of the wait at a median
+4.8 s per request. A synthetic prefill-versus-decode benchmark would measure a
+provider characteristic that this data has already priced. Dropped, not deferred.
