@@ -3,7 +3,12 @@
 <!-- Created in Phase 1 and maintained for the life of the project.
      The three fields below drive the /forge detection ladder. A stale Gate
      will route the next session into the wrong phase, so update them as part
-     of the work, not as bookkeeping afterward. -->
+     of the work, not as bookkeeping afterward.
+     This file is injected at every session start against a budget, and a file
+     kept under 200 lines is never capped: current state and the next action.
+     A closed slice's story goes to docs/DECISIONS.md, not into a new section
+     here. Correct a wrong line by rewriting it, never by appending a
+     correction underneath it. -->
 
 Phase: <1 spec | 2 env | 3 code>
 Gate:  <IN_PROGRESS | AWAITING_APPROVAL | PASSED>

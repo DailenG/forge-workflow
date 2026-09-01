@@ -276,7 +276,7 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
       <div><span>Audience</span><b>Technical, not a developer</b></div>
       <div><span>Runs in</span><b>Claude Code</b></div>
       <div><span>Reading time</span><b>About 20 minutes</b></div>
-      <div><span>Edition</span><b>v1.3.0 &nbsp;/&nbsp; for Claude 5</b></div>
+      <div><span>Edition</span><b>v1.4.0 &nbsp;/&nbsp; for Claude 5</b></div>
     </div>
   </div>
 </header>
@@ -311,29 +311,26 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
 <main>
 
 <div class="note go">
-  <h4>New in v1.3.0 &nbsp;/&nbsp; a release now hands you something you can download</h4>
+  <h4>New in v1.4.0 &nbsp;/&nbsp; the project's notes stay readable as the project grows</h4>
   <p>
-    Forge used to ask, right at the start, how the finished thing would reach the people who
-    use it, write the answer down, and then never act on it. A release ended at a tag and a
-    page of notes, with nothing attached you could actually download. Now the first phase
-    recommends the simplest way to hand your project to someone (usually a versioned zip, a
-    double-click installer for Windows if that suits it better, a single file for a command
-    line tool) and the release builds exactly that, unpacks it somewhere clean to prove it
-    works, and attaches it to the release page.
+    Forge keeps a running record of your project: what is being worked on now, what was
+    decided and why, which tests prove which requirement. On a long project those notes kept
+    growing, and nothing ever told Forge to tidy them. On one real project the "where we are
+    now" file reached a hundred and ten thousand characters, most of it the story of work
+    already finished, and every single session began by reading all of it.
   </p>
   <p>
-    Forge does the easy part and tells you plainly about the rest. It will say when a program
-    it built is unsigned, and therefore that Windows or macOS will warn people the first time
-    they run it. Signing it, putting it in an app store, or making it update itself stays your
-    call, and Forge will never quietly do any of that on your behalf. A website or a hosted
-    service has nothing to download, so Forge says so and attaches nothing rather than
-    inventing a file.
+    That file now has a size limit, and Forge is handed its opening rather than the whole
+    thing when it runs long, with a plain note saying so. Finished work moves out of the
+    active list instead of piling up in it. A note that turns out to be wrong gets rewritten
+    rather than corrected underneath, so the old wrong answer cannot be the first thing read.
+    And each fact has one home: what happened lives in the decisions file, the proof lives in
+    the test map, and the "where we are now" file says only what to do next.
   </p>
   <p>
-    Also fixed: a rough edge deliberately put off until a later version used to vanish once
-    that version shipped or got skipped. It stayed on the list, waiting on a date that had
-    already passed, and nothing ever brought it back up. Every release now looks at what was
-    put off until it, and either fixes it or asks you where it goes next.
+    What you should notice: sessions start faster, Forge spends its attention on your code
+    instead of on its own paperwork, and it stops telling you two different things about the
+    same decision.
   </p>
   <p>
     <strong>Already have a project on an older Forge?</strong> Nothing breaks and nothing is
@@ -542,7 +539,7 @@ footer{padding:3.5rem 0 5rem;color:var(--chalk-3);font-family:var(--mono);font-s
       <tbody>
         <tr>
           <td><strong>A current Claude model</strong><br>Claude 5 era. This is almost certainly you.</td>
-          <td><code>forge-workflow</code><br>v1.3.0</td>
+          <td><code>forge-workflow</code><br>v1.4.0</td>
           <td><code>/forge</code></td>
         </tr>
         <tr>
@@ -1287,7 +1284,7 @@ C:\Users\&lt;you&gt;\.claude\skills\forge-workflow\
 </div>
 
 <footer>
-  <div class="sheet">FORGE &nbsp;/&nbsp; GUIDE FOR NON-DEVELOPERS &nbsp;/&nbsp; REVISED FOR v1.3.0</div>
+  <div class="sheet">FORGE &nbsp;/&nbsp; GUIDE FOR NON-DEVELOPERS &nbsp;/&nbsp; REVISED FOR v1.4.0</div>
 </footer>
 
 </div>

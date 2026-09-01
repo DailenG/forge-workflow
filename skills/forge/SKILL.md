@@ -34,16 +34,18 @@ Then continue with Step 1. Degraded hooks are a real regression but not a blocke
 
 ## Step 1: Establish actual state
 
-The SessionStart hook may have already injected `CONTINUE.md` and a git summary. It reports what the files claim, not whether the claim is true, so gather the real state yourself.
+The SessionStart hook may have already injected `CONTINUE.md` and a git summary. It reports what the files claim, not whether the claim is true, so gather the real state yourself. The injection is capped, so on a project whose `CONTINUE.md` has outgrown the budget you were handed its opening only, and the hook says so when that happens.
 
 Read, skipping anything absent:
 
 - `CONTINUE.md` (phase, gate, mode, current task, next action)
-- `TODO.md`
-- `docs/SRS.md`
-- `docs/DESIGN.md` (design tier, surfaces, polish log)
-- `docs/traceability.md`
 - `CLAUDE.md` (project commands)
+- `TODO.md` - In Progress, Blocked, open backlog entries, and open UX debt. Skip Completed.
+- `docs/SRS.md` - the section list, the requirements in reach, and the CHANGE LOG tail
+- `docs/DESIGN.md` (design tier, surfaces, polish log tail)
+- `docs/traceability.md` - status counts, and the rows for the requirements in reach
+
+Read by section and by ID once a project is mature enough that these do not fit at once. A partial read is fine and normal; a partial read presented as a complete one is what breaks the reconcile below, so name what you skipped.
 
 Observe:
 

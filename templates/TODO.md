@@ -35,6 +35,10 @@ below it. Blank means the next release.>
 
 ## Completed
 
-<Newest first. Archive to docs/DONE-ARCHIVE.md when this passes ~50 entries.>
+<Newest first. One line each: what closed, when, and the merge commit. The
+reasoning belongs in docs/DECISIONS.md and the test evidence in
+docs/traceability.md; do not restate either here. Move entries to
+docs/DONE-ARCHIVE.md once this passes 50, and evict a CLOSED task from Needed
+in the same edit that closes it.>
 
 - **T-000** Description. Closes: FR-000. Done: YYYY-MM-DD. Merge: `abc1234`.

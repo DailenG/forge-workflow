@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-08-22
+
+### Fixed
+
+- The record set no longer grows without a ceiling until it stops fitting in a
+  session. Every artifact the lifecycle maintains was governed by append verbs
+  with no bound, and the only archival guidance in the plugin was a comment in
+  `templates/TODO.md` that no skill ever asked anyone to act on. Measured on a
+  mature project: `CONTINUE.md` at 110KB, `docs/DECISIONS.md` at 1MB across 211
+  entries in twenty days, `TODO.md` at 624KB of which 74 percent was closed work,
+  and a `docs/traceability.md` of 305KB. `forge-standards` now carries a Record
+  hygiene section: `CONTINUE.md` holds current state and the next action under a
+  200 line ceiling, one fact has one owner across the artifacts, a wrong record
+  is rewritten and marked superseded rather than corrected underneath, and
+  `TODO.md` Completed archives to `docs/DONE-ARCHIVE.md` past 50 entries with a
+  CLOSED task evicted from the backlog in the edit that closes it.
+- `scripts/session-start.js` selects what it injects instead of pushing the whole
+  file. It read `CONTINUE.md` with `readFileSync` and injected it verbatim with
+  no budget, so the file's size was charged to every session in the project,
+  unconditionally: about 30,000 tokens on the project measured above, better than
+  a third of it narrative about already-closed slices. The budget is 20,000
+  characters, set so a file honouring the 200 line ceiling is never capped.
+  Selection matters more than the number: cutting from the top only reaches the
+  live state when the live state is at the top, and on that project the opening
+  section alone was 44KB, so a positional cut spent the entire budget without
+  reaching the next action. The hook now always injects the ladder fields, with
+  wrapped values kept whole, then the sections describing what happens next in
+  priority order. Nothing else is injected however much budget is left over,
+  because filling the remainder with closed-slice narrative is the cost the cap
+  exists to remove. Whatever is withheld is named with its size so it can be read
+  on purpose, and a record whose sections are named something else falls back to
+  its opening rather than to the state fields alone. Measured on the same file:
+  30,153 tokens down to 3,255, with the next action and the open blocker both
+  present. `forge` Step 1 knows the injection can be partial. Prompt caching does
+  not make this unnecessary: it is a per-token multiplier, so it scales a large
+  injection and a small one alike, it buys nothing on context window occupancy,
+  and prefix-exact invalidation means a file rewritten every slice is re-written
+  at the cache write premium rather than amortized.
+- The read-first lists are scoped rather than whole-file. `forge-code` and
+  `forge` Step 1 asked for seven documents front to back, which on the measured
+  project totalled 2.3MB, roughly 578,000 tokens: not large, impossible. An
+  instruction that cannot be followed is not a weaker instruction, it is an
+  unmonitored one, and the reconcile step that must stop on a record-versus-
+  reality discrepancy was running on an undeclared partial read. Both lists now
+  name what to read: open backlog rather than Completed, the requirements in
+  reach rather than the whole SRS, decision entries reached by grepping the IDs
+  in play, traceability rows for those IDs plus the status counts. A partial read
+  is explicitly fine; presenting one as complete is not.
+
 ## [1.3.0] - 2026-08-21
 
 ### Fixed
@@ -401,7 +450,8 @@ Initial public release.
 - Illustrated user guide hosted on GitHub Pages.
 - Marketplace distribution via the `dailen` marketplace, plus a manual skills-directory install path.
 
-[Unreleased]: https://github.com/DailenG/forge-workflow/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/DailenG/forge-workflow/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/DailenG/forge-workflow/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/DailenG/forge-workflow/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/DailenG/forge-workflow/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/DailenG/forge-workflow/compare/v1.1.0...v1.1.2
